@@ -1,0 +1,46 @@
+{
+  "name": "VAMS",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.6.0",
+    "@fortawesome/free-solid-svg-icons": "^6.6.0",
+    "@fortawesome/vue-fontawesome": "^3.0.8",
+    "@mapbox/mapbox-gl-language": "^1.0.1",
+    "@vuepic/vue-datepicker": "^9.0.2",
+    "axios": "^1.6.8",
+    "core-js": "^3.8.3",
+    "docx": "^9.5.1",
+    "file-saver": "^2.0.5",
+    "mapbox-gl": "^3.3.0",
+    "maplibre-gl": "^4.1.3",
+    "maplibre-grid": "^1.0.0",
+    "maptalks": "^1.0.0-rc.37",
+    "maptalks.heatmap": "^0.6.2",
+    "maptalks.markercluster": "^0.8.8",
+    "maptalks.three": "^0.38.3",
+    "ol": "^9.2.4",
+    "three": "^0.168.0",
+    "vue": "^3.2.13",
+    "vue-router": "^4.0.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.16",
+    "@babel/eslint-parser": "^7.12.16",
+    "@vue/cli-plugin-babel": "~5.0.0",
+    "@vue/cli-plugin-eslint": "~5.0.0",
+    "@vue/cli-plugin-router": "~5.0.0",
+    "@vue/cli-service": "~5.0.0",
+    "@vue/eslint-config-standard": "^6.1.0",
+    "eslint": "^7.32.0",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "eslint-plugin-vue": "^8.0.3"
+  }
+}
