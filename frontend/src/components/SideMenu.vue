@@ -30,15 +30,15 @@ const router = useRouter()
 
 const serviceList = [
   { key: '/doubt', name: '관심지역\n의심선박 분류', icon: 'warning' },
-  { key: '/fishing', name: 'IUU 어업선박 감시', icon: 'point' },
-  { key: '/tracking', name: '선박 시공간 추적', icon: 'search' },
-  { key: '/decision', name: '선박활동감시\n의사결정 지원', icon: 'check' },
-  { key: '/event', name: '선박활동 사건 관리', icon: 'event' },
-  { key: '/doubt', name: '관심지역\n의심선박 분류', icon: 'warning' },
-  { key: '/fishing', name: 'IUU 어업선박 감시', icon: 'point' },
-  { key: '/tracking', name: '선박 시공간 추적', icon: 'search' },
-  { key: '/decision', name: '선박활동감시\n의사결정 지원', icon: 'check' },
-  { key: '/event', name: '선박활동 사건 관리', icon: 'event' },
+  { key: '/fishing', name: '환적 의심선박 분류', icon: 'point' },
+  { key: '/tracking', name: '조업/비조업\n자동식별', icon: 'search' },
+  { key: '/decision', name: '불법조업구역 추정', icon: 'check' },
+  { key: '/event', name: 'IUU 어업패턴 감시', icon: 'event' },
+  { key: '/doubt', name: '의심선박\n시공간 추적', icon: 'warning' },
+  { key: '/fishing', name: '다중선박\n이동범위 추정', icon: 'point' },
+  { key: '/tracking', name: '입항지연 선박 추적', icon: 'search' },
+  { key: '/decision', name: 'VLM 기반\n선박활동 설명', icon: 'check' },
+  { key: '/event', name: 'LLM 기반\n불법어업 근거', icon: 'event' },
   { key: '/event', name: '선박활동 사건 관리', icon: 'event' }
 ]
 
