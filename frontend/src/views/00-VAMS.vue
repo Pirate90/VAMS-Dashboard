@@ -13,8 +13,9 @@
       <ToolBar @section:change="onChangeSection"
         @trenchmap:change="onChangeTrenchmap"
         @filter:change="onChangeFilter"
-        @districtmapconfig:toggle="showDistrictmapConfig = !showDistrictmapConfig"
-        @imglist:toggle="showImgList = !showImgList"
+        @districtmapconfig:toggle="showDistrictmapConfig = !showDistrictmapConfig; showImgList = false"
+        @imglist:toggle="showImgList = !showImgList; showDistrictmapConfig = false"
+        @close:popups="showDistrictmapConfig = false; showImgList = false"
         @toolbar:draw="handleStartDraw" :selectedCoords="selectedCoords"
       ></ToolBar>
       <MainMap ref="map" @info:show="showVesselInfo" @data:load="isLoading = false" @draw:completed="onDrawCompleted"></MainMap>
@@ -52,7 +53,7 @@ const showDistrictmapConfig = ref(false)
 const showImgList = ref(false)
 const displayResult = ref(false)
 const currentResult = ref('')
-const vesselList = ref([])
+// vesselList 참조 변수는 이곳에서 사용되지 않으므로 제거했습니다.
 const currentVessel = ref({})
 const show = ref(false)
 const selectedCoords = ref(null)
@@ -105,7 +106,6 @@ function showVesselInfo (e) {
 }
 function closeVesselInfo (id) {
   show.value = false
-  vesselList.value = []
   map.value.normalize(id)
 }
 

@@ -4,7 +4,7 @@ const routes = [
   {
     path: '/',
     name: 'Main',
-    component: () => import('@/views/VAMS.vue'),
+    component: () => import('@/views/00-VAMS.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -16,85 +16,61 @@ const routes = [
   {
     path: '/tvd',
     name: 'TransshipmentVesselDetection',
-    component: () => import('@/views/DoubtView.vue'),
+    component: () => import('@/views/02-TVD.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/fac',
     name: 'FishingActivityClassification',
-    component: () => import('@/views/DoubtView.vue'),
+    component: () => import('@/views/03-FAC.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/fgvd',
     name: 'FishingGroundVesselDetection',
-    component: () => import('@/views/DoubtView.vue'),
+    component: () => import('@/views/04-FGVD.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/fpi',
     name: 'FishingPatternIdentification',
-    component: () => import('@/views/DoubtView.vue'),
+    component: () => import('@/views/05-FPI.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/svt',
     name: 'SuspiciousVesselTracing',
-    component: () => import('@/views/DoubtView.vue'),
+    component: () => import('@/views/06-SVT.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/mvt',
     name: 'MultiVesselTracing',
-    component: () => import('@/views/DoubtView.vue'),
+    component: () => import('@/views/07-MVT.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/lavt',
     name: 'LateArrivalVesselTracing',
-    component: () => import('@/views/DoubtView.vue'),
+    component: () => import('@/views/08-LAVT.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/lgvd',
     name: 'LLMGroundVesselDescription',
-    component: () => import('@/views/DoubtView.vue'),
+    component: () => import('@/views/09-LGVD.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/lvad',
     name: 'LLMVesselActivityDescription',
-    component: () => import('@/views/DoubtView.vue'),
+    component: () => import('@/views/10-LVAD.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/doubt',
-    name: 'Doubt',
-    component: () => import('@/views/DoubtView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/fishing',
-    name: 'Fishing',
-    component: () => import('@/views/FishingView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/decision',
-    name: 'Decision',
-    component: () => import('@/views/DecisionView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/tracking',
-    name: 'Tracking',
-    component: () => import('@/views/TracingView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/event',
-    name: 'Event',
-    component: () => import('@/views/EventView.vue'),
+    path: '/report',
+    name: 'Report',
+    component: () => import('@/views/11-REPORT.vue'),
     meta: { requiresAuth: true }
   },
   {

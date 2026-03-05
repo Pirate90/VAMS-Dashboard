@@ -6,7 +6,7 @@
     </a>
     <div style="flex: 1;">
       <button v-for="s in serviceList" :key="s.name"
-        :class="['service', isSelectedService(s.key) ? 'selected-service' : '']"
+        :class="['service', isSelectedService(s.key) ? 'selected-service' : '', { 'collapsed': !expand }]"
         @click="onClickMenu(s.key)"
         :disabled="isSelectedService(s.key)"
       >
@@ -29,17 +29,17 @@ const router = useRouter()
 // const emit = defineEmits(['menu:change'])
 
 const serviceList = [
-  { key: '/lvd', name: '관심지역\n의심선박 분류', icon: 'warning' },
-  { key: '/fishing', name: '환적 의심선박 분류', icon: 'point' },
-  { key: '/tracking', name: '조업/비조업\n자동식별', icon: 'search' },
-  { key: '/decision', name: '불법조업구역 추정', icon: 'check' },
-  { key: '/event', name: 'IUU 어업패턴 감시', icon: 'event' },
-  { key: '/doubt', name: '의심선박\n시공간 추적', icon: 'warning' },
-  { key: '/fishing', name: '다중선박\n이동범위 추정', icon: 'point' },
-  { key: '/tracking', name: '입항지연 선박 추적', icon: 'search' },
-  { key: '/decision', name: 'VLM 기반\n선박활동 설명', icon: 'check' },
-  { key: '/event', name: 'LLM 기반\n불법어업 근거', icon: 'event' },
-  { key: '/event', name: '선박활동 사건 관리', icon: 'event' }
+  { key: '/lvd', name: '관심지역\n의심선박 분류', icon: '01' },
+  { key: '/tvd', name: '환적 의심선박 분류', icon: '02' },
+  { key: '/fac', name: '조업/비조업\n자동식별', icon: '03' },
+  { key: '/fgvd', name: '불법조업구역 추정', icon: '04' },
+  { key: '/fpi', name: 'IUU 어업패턴 감시', icon: '05' },
+  { key: '/svt', name: '의심선박\n시공간 추적', icon: '06' },
+  { key: '/mvt', name: '다중선박\n이동범위 추정', icon: '07' },
+  { key: '/lavt', name: '입항지연 선박 추적', icon: '08' },
+  { key: '/lgvd', name: 'VLM 기반\n선박활동 설명', icon: '09' },
+  { key: '/lvad', name: 'LLM 기반\n불법어업 근거', icon: '10' },
+  { key: '/report', name: '선박활동 사건 관리', icon: 'event' }
 ]
 
 const expand = ref(true)
@@ -71,7 +71,6 @@ function onClickMenu (m) {
 section {
   width: 250px;
   height: 100%;
-  /* background-color: #1447AB; */
   background: #222222;
   padding: 30px;
   box-shadow: 0px 0px 2px #fff;
@@ -80,6 +79,7 @@ section {
   flex-direction: column;
   align-items: center;
   transition: all .2s ease;
+  overflow-x: hidden; /* 추가: 사이드바 바깥으로 삐져나온 요소의 이벤트를 차단 */
 }
 .logo {
   width: 100%;
@@ -108,6 +108,9 @@ section {
   transition: all .2s;
   position: relative;
 }
+.service.collapsed {
+  width: 40px;
+}
 .service:hover,
 .selected-service {
   cursor: pointer;
@@ -118,9 +121,9 @@ section {
   cursor: auto;
 }
 .service img {
-  height: 20px;
+  height: 30px;
   position: absolute;
-  left: 10px;
+  left: 5px;
 }
 .service span {
   white-space: pre;
