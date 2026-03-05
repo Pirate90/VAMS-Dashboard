@@ -1,0 +1,24 @@
+{
+  "type": "FeatureCollection",
+  "name": "울산해양경찰서_관할구역",
+  "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "NAME": "울산해양경찰서" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [129.450000, 35.650000],
+            [130.500000, 35.650000],
+            [130.180000, 35.110000],
+            [129.680000, 35.060000],
+            [129.225000, 35.181667],
+            [129.450000, 35.650000]
+          ]
+        ]
+      }
+    }
+  ]
+}

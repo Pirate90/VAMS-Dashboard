@@ -9,43 +9,53 @@
       ></DistrictmapConfig>
       <ToolBar @section:change="onChangeSection"
         @trenchmap:change="onChangeTrenchmap"
+        @filter:change="onChangeFilter"
         @districtmapconfig:toggle="showDistrictmapConfig = !showDistrictmapConfig"
       ></ToolBar>
       <MainMap ref="map" @info:show="showVesselInfo" @data:load="isLoading = false"></MainMap>
+      <VesselInformation ref="vesselInfo" v-if="show"
+        :vessel="currentVessel"
+        @info:close="closeVesselInfo"
+        @info:highlight="map.highlight"
+        @info:normalize="map.normalize"
+        @info:trajectory="showTrajectory"
+      ></VesselInformation>
 
-      <TracingPopup :currentVessel="currentVessel"/>
-      <ImgList @img:display="displayImg"/>
-    </div>
-
-    <div class="result-popup" v-if="displayResult">
-      <button @click="displayResult = false"><f-a-icon icon="x" /></button>
-      <img :src="`/tracing/img/${currentResult}/result.png`" alt="">
+      <DatetimeSelector @change:datetime="onChangeDatetime"></DatetimeSelector>
     </div>
   </main>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import ToolBar from '@/components/tracing/ToolBar'
-import MainMap from '@/components/tracing/MainMap'
+import ToolBar from '@/components/01-LVD/ToolBar'
+import MainMap from '@/components/01-LVD/MainMap'
+import DatetimeSelector from '@/components/01-LVD/DatetimeSelector'
+import VesselInformation from '@/components/VesselInformation'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import DistrictmapConfig from '@/components/DistrictmapConfig'
-import TracingPopup from '@/components/tracing/TracingPopup.vue'
-import ImgList from '@/components/tracing/ImgList.vue'
 
 const map = ref()
+const vesselInfo = ref()
 
 const isLoading = ref(false)
 const showDistrictmapConfig = ref(false)
+const vesselList = ref([])
 const currentVessel = ref({})
-const displayResult = ref(false)
-const currentResult = ref('')
+const show = ref(false)
 
 function onChangeSection (s) {
   map.value.changeCenter(s)
 }
 function onChangeTrenchmap (t) {
   map.value.changeTrenchmap(t)
+}
+function onChangeFilter (f) {
+  map.value.changeFilter(f)
+}
+function onChangeDatetime (start, end, today, tomorrow) {
+  isLoading.value = true
+  map.value.changeDatetime(start, end, today, tomorrow)
 }
 function onChangeDistrictmapConfig (e) {
   map.value.changeDistrictmapConfig(e)
@@ -57,17 +67,20 @@ function onUnselectall () {
   map.value.onUnselectAllDistrict()
 }
 
-function displayImg (info, type) {
-  if (type === 'result') {
-    currentResult.value = info.name
-    displayResult.value = true
-  } else {
-    map.value.displayImg(info, type)
-  }
-}
-
 function showVesselInfo (e) {
   currentVessel.value = e
+  map.value.hideTrajectory()
+  show.value = true
+}
+function closeVesselInfo (id) {
+  show.value = false
+  vesselList.value = []
+  map.value.normalize(id)
+}
+
+function showTrajectory (mmsi) {
+  isLoading.value = true
+  map.value.showTrajectory(mmsi)
 }
 </script>
 
@@ -78,36 +91,5 @@ main {
 .content {
   position: relative;
   flex: 1;
-}
-
-.result-popup {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  max-width: 80%;
-  max-height: 80%;
-  background: #fff;
-}
-.result-popup > img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.result-popup > button {
-  position: absolute;
-  border: none;
-  background: #F3463D;
-  color: #ffffff;
-  font-size: 15px;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  right: 10px;
-  top: 10px;
-}
-.result-popup > button:hover {
-  cursor: pointer;
-  opacity: 0.7;
 }
 </style>

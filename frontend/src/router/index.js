@@ -8,6 +8,66 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/lvd',
+    name: 'LoiteringVesselDetection',
+    component: () => import('@/views/01-LVD.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/tvd',
+    name: 'TransshipmentVesselDetection',
+    component: () => import('@/views/DoubtView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/fac',
+    name: 'FishingActivityClassification',
+    component: () => import('@/views/DoubtView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/fgvd',
+    name: 'FishingGroundVesselDetection',
+    component: () => import('@/views/DoubtView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/fpi',
+    name: 'FishingPatternIdentification',
+    component: () => import('@/views/DoubtView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/svt',
+    name: 'SuspiciousVesselTracing',
+    component: () => import('@/views/DoubtView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/mvt',
+    name: 'MultiVesselTracing',
+    component: () => import('@/views/DoubtView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/lavt',
+    name: 'LateArrivalVesselTracing',
+    component: () => import('@/views/DoubtView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/lgvd',
+    name: 'LLMGroundVesselDescription',
+    component: () => import('@/views/DoubtView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/lvad',
+    name: 'LLMVesselActivityDescription',
+    component: () => import('@/views/DoubtView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/doubt',
     name: 'Doubt',
     component: () => import('@/views/DoubtView.vue'),

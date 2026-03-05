@@ -41,7 +41,6 @@ import MainMap from '@/components/vams/MainMap'
 import DatetimeSelector from '@/components/vams/DatetimeSelector'
 import VesselInformation from '@/components/VesselInformation'
 import LoadingSpinner from '@/components/LoadingSpinner'
-// import DistrictmapConfigModal from '@/components/DistrictmapConfigModal'
 import DistrictmapConfig from '@/components/DistrictmapConfig'
 import ImgList from '@/components/vams/ImgList'
 

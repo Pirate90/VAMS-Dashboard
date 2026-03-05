@@ -1,7 +1,6 @@
 <template>
   <main>
     <LoadingSpinner v-if="isLoading"/>
-    <!-- <DistrictmapConfigModal v-if="showDistrictmapConfig" @districtmapconfig:close="showDistrictmapConfig = false"></DistrictmapConfigModal> -->
     <div class="content">
       <DistrictmapConfig :show="showDistrictmapConfig"
         @districtmapconfig:change="onChangeDistrictmapConfig"
@@ -35,7 +34,6 @@ import MainMap from '@/components/decision/MainMap'
 import DatetimeSelector from '@/components/decision/DatetimeSelector'
 import ServicePopup from '@/components/decision/ServicePopup'
 import LoadingSpinner from '@/components/LoadingSpinner'
-// import DistrictmapConfigModal from '@/components/DistrictmapConfigModal'
 import DistrictmapConfig from '@/components/DistrictmapConfig'
 
 const map = ref()

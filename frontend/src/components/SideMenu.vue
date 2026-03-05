@@ -29,7 +29,7 @@ const router = useRouter()
 // const emit = defineEmits(['menu:change'])
 
 const serviceList = [
-  { key: '/doubt', name: '관심지역\n의심선박 분류', icon: 'warning' },
+  { key: '/lvd', name: '관심지역\n의심선박 분류', icon: 'warning' },
   { key: '/fishing', name: '환적 의심선박 분류', icon: 'point' },
   { key: '/tracking', name: '조업/비조업\n자동식별', icon: 'search' },
   { key: '/decision', name: '불법조업구역 추정', icon: 'check' },
