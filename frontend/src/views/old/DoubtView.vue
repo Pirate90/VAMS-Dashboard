@@ -31,9 +31,9 @@ import { ref } from 'vue'
 import ToolBar from '@/components/doubt/ToolBar'
 import MainMap from '@/components/doubt/MainMap'
 import DatetimeSelector from '@/components/doubt/DatetimeSelector'
-import VesselInformation from '@/components/VesselInformation'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import DistrictmapConfig from '@/components/DistrictmapConfig'
+import VesselInformation from '@/components/common/VesselInformation'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
+import DistrictmapConfig from '@/components/common/DistrictmapConfig'
 
 const map = ref()
 const vesselInfo = ref()

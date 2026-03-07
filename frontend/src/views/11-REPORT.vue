@@ -116,7 +116,7 @@
 <script setup>
 import { ref } from 'vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
-import EventReport from '@/components/event/EventReport.vue'
+import EventReport from '@/components/11-REPORT/EventReport.vue'
 
 const startDate = ref(new Date())
 const showReport = ref(false)

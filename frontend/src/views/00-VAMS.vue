@@ -10,15 +10,21 @@
       <ImgList :show="showImgList"
         @img:display="displayImg"
       ></ImgList>
-      <ToolBar @section:change="onChangeSection"
+      <ToolBar ref="toolbar"
+        @section:change="onChangeSection"
         @trenchmap:change="onChangeTrenchmap"
         @filter:change="onChangeFilter"
-        @districtmapconfig:toggle="showDistrictmapConfig = !showDistrictmapConfig; showImgList = false"
-        @imglist:toggle="showImgList = !showImgList; showDistrictmapConfig = false"
-        @close:popups="showDistrictmapConfig = false; showImgList = false"
+        @districtmapconfig:toggle="onToggleDistrictmap"
+        @imglist:toggle="onToggleImgList"
+        @close:popups="onToolbarPopupsOpened"
         @toolbar:draw="handleStartDraw" :selectedCoords="selectedCoords"
       ></ToolBar>
-      <MainMap ref="map" @info:show="showVesselInfo" @data:load="isLoading = false" @draw:completed="onDrawCompleted"></MainMap>
+      <MainMap ref="map"
+        @info:show="showVesselInfo"
+        @data:load="isLoading = false"
+        @draw:completed="onDrawCompleted"
+        @popup:open="onMainMapPopupOpened"
+      ></MainMap>
       <VesselInformation ref="vesselInfo" v-if="show"
         :vessel="currentVessel"
         @info:close="closeVesselInfo"
@@ -41,12 +47,13 @@ import ToolBar from '@/components/common/ToolBar'
 import MainMap from '@/components/common/MainMap'
 import DatetimeSelector from '@/components/common/DatetimeSelector'
 import ImgList from '@/components/common/ImgList'
-import VesselInformation from '@/components/VesselInformation'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import DistrictmapConfig from '@/components/DistrictmapConfig'
+import VesselInformation from '@/components/common/VesselInformation'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
+import DistrictmapConfig from '@/components/common/DistrictmapConfig'
 
 const map = ref()
 const vesselInfo = ref()
+const toolbar = ref()
 
 const isLoading = ref(false)
 const showDistrictmapConfig = ref(false)
@@ -72,25 +79,32 @@ function onDrawCompleted (coords) {
 function onChangeSection (s) {
   map.value.changeCenter(s)
 }
+
 function onChangeTrenchmap (t) {
   map.value.changeTrenchmap(t)
 }
+
 function onChangeFilter (f) {
   map.value.changeFilter(f)
 }
+
 function onChangeDatetime (start, end, today, tomorrow) {
   isLoading.value = true
   map.value.changeDatetime(start, end, today, tomorrow)
 }
+
 function onChangeDistrictmapConfig (e) {
   map.value.changeDistrictmapConfig(e)
 }
+
 function onSelectall () {
   map.value.onSelectAllDistrict()
 }
+
 function onUnselectall () {
   map.value.onUnselectAllDistrict()
 }
+
 function displayImg (info, type) {
   if (type === 'result') {
     currentResult.value = info.name
@@ -99,11 +113,13 @@ function displayImg (info, type) {
     map.value.displayImg(info, type)
   }
 }
+
 function showVesselInfo (e) {
   currentVessel.value = e
   map.value.hideTrajectory()
   show.value = true
 }
+
 function closeVesselInfo (id) {
   show.value = false
   map.value.normalize(id)
@@ -112,6 +128,34 @@ function closeVesselInfo (id) {
 function showTrajectory (mmsi) {
   isLoading.value = true
   map.value.showTrajectory(mmsi)
+}
+
+function onToggleDistrictmap () {
+  showDistrictmapConfig.value = !showDistrictmapConfig.value
+  if (showDistrictmapConfig.value) {
+    showImgList.value = false
+    map.value?.closePopups() // 지도 사이드 팝업 닫기
+  }
+}
+
+function onToggleImgList () {
+  showImgList.value = !showImgList.value
+  if (showImgList.value) {
+    showDistrictmapConfig.value = false
+    map.value?.closePopups() // 지도 사이드 팝업 닫기
+  }
+}
+
+function onToolbarPopupsOpened () {
+  showDistrictmapConfig.value = false
+  showImgList.value = false
+  map.value?.closePopups() // 툴바 하위 메뉴 열릴 때 지도 사이드 팝업 닫기
+}
+
+function onMainMapPopupOpened () {
+  showDistrictmapConfig.value = false
+  showImgList.value = false
+  toolbar.value?.closePopups() // 지도 사이드 팝업 열릴 때 툴바 팝업 닫기
 }
 </script>
 

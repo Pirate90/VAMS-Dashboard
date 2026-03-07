@@ -34,7 +34,7 @@
 
 <script setup>
 import { ref, defineEmits, watch } from 'vue'
-import RequestPopup from '@/components/RequestPopup.vue'
+import RequestPopup from '@/components/common/RequestPopup.vue'
 
 const emit = defineEmits(['section:change', 'trenchmap:change', 'filter:change', 'list:show'])
 

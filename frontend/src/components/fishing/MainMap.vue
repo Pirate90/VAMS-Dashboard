@@ -17,7 +17,7 @@ import Heatmap from '@/util/maptalks/heatmap'
 import VesselMarker from '@/util/maptalks/marker'
 import Trajectory from '@/util/maptalks/trajectory'
 import HeatmapConfig from '@/components/fishing/HeatmapConfig'
-import VesselList from '@/components/VesselList'
+import VesselList from '@/components/common/VesselList'
 import * as maptalks from 'maptalks' // 추가
 
 import { iuuApi } from '@/apis'

@@ -1,17 +1,24 @@
 <template>
   <div class="main-map-container">
     <div id="map" class="map"></div>
-    <button class="vessel-list-toggle" :class="{ active: showVesselList }" @click="toggleVesselList">
-      <img src="@/assets/vessel-icon.png" alt="vessel" class="vessel-icon" />
-      <span class="vessel-list-text">선박 목록</span>
+    <button class="side-toggle-btn btn-list" :class="{ active: showVesselList }" @click="toggleVesselList">
+      <img src="@/assets/ship-icon.png" alt="ship" class="tool-icon" />
+      <span class="hover-text">선박 목록</span>
     </button>
-    <div class="vessel-list-wrapper" v-if="showVesselList">
+    <button class="side-toggle-btn btn-search" :class="{ active: showVesselSearch }" @click="toggleVesselSearch">
+      <img src="@/assets/search-white.png" alt="search" class="tool-icon" />
+      <span class="hover-text">선박 조회</span>
+    </button>
+    <div class="popup-wrapper wrapper-list" v-if="showVesselList">
       <VesselList :show="showVesselList" :list="vesselList"
         @list:close="closeVesselList"
         @info:show="showVesselMarker"
         @info:hide="hideVesselMarker"
         @info:trajectory="showTrajectory"
       ></VesselList>
+    </div>
+    <div class="popup-wrapper wrapper-search" v-if="showVesselSearch">
+      <VesselSearch :show="showVesselSearch" @search:close="showVesselSearch = false" />
     </div>
   </div>
 </template>
@@ -24,12 +31,12 @@ import Trenchmap from '@/util/maptalks/trenchmap'
 import Districtmap from '@/util/maptalks/districtmap'
 import Trajectory from '@/util/maptalks/trajectory'
 import Img from '@/util/maptalks/img'
-import VesselList from '@/components/VesselList'
+import VesselList from '@/components/common/VesselList'
+import VesselSearch from '@/components/common/VesselSearch'
 import * as maptalks from 'maptalks'
-
 import { doubtApi } from '@/apis'
 
-const emit = defineEmits(['info:show', 'data:load', 'draw:completed'])
+const emit = defineEmits(['info:show', 'data:load', 'draw:completed', 'popup:open'])
 
 let map = null
 let img = null
@@ -44,11 +51,10 @@ let drawLayer = null
 
 const vesselList = ref([])
 const showVesselList = ref(false)
+const showVesselSearch = ref(false)
 
 onMounted(async () => {
   map = initMap()
-
-  // Sar(map)
   trenchmap = await Trenchmap(map)
   districtmap = await Districtmap(map)
   vessel = Vessel(map, onClickVessel)
@@ -97,7 +103,6 @@ function showVesselMarker (vesselData) {
       easing: 'out'
     })
   }
-
   // 2. 부모(VAMS.vue)에게 선박 정보를 넘겨서 하나의 상세 정보 창(VesselInformation)만 띄우도록 함
   emit('info:show', vesselData)
 }
@@ -108,6 +113,18 @@ function hideVesselMarker () {
 
 function toggleVesselList () {
   showVesselList.value = !showVesselList.value
+  if (showVesselList.value) {
+    showVesselSearch.value = false
+    emit('popup:open')
+  }
+}
+
+function toggleVesselSearch () {
+  showVesselSearch.value = !showVesselSearch.value
+  if (showVesselSearch.value) {
+    showVesselList.value = false
+    emit('popup:open')
+  }
 }
 
 function closeVesselList () {
@@ -211,6 +228,11 @@ defineExpose({
   },
   stopDraw: () => {
     drawTool.disable()
+  },
+  // 💡 아래 closePopups 함수를 맨 끝에 추가
+  closePopups: () => {
+    showVesselList.value = false
+    showVesselSearch.value = false
   }
 })
 </script>
@@ -228,10 +250,9 @@ defineExpose({
   height: 100%;
 }
 
-/* 동그란 토글 버튼 스타일 */
-.vessel-list-toggle {
+/* 💡 통합된 우측 사이드 토글 버튼 스타일 */
+.side-toggle-btn {
   position: absolute;
-  top: 60px;
   right: 30px;
   width: 45px;
   height: 45px;
@@ -244,20 +265,23 @@ defineExpose({
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 18px;
   transition: all 0.2s ease;
   box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
-.vessel-list-toggle:hover,
-.vessel-list-toggle.active {
+.side-toggle-btn:hover,
+.side-toggle-btn.active {
   background-color: #757575;
   color: #ffffff;
   border-color: #ffffff;
 }
 
-/* 💡 추가: 선박 아이콘 스타일 */
-.vessel-icon {
+/* 각각의 위치 지정 */
+.btn-list { top: 60px; }
+.btn-search { top: 115px; }
+
+/* 💡 내부 아이콘 스타일 제한 */
+.tool-icon {
   width: 22px !important;
   height: 22px !important;
   max-width: 100%;
@@ -265,41 +289,40 @@ defineExpose({
   display: block;
 }
 
-/* 💡 추가: 글씨 박스 스타일 및 애니메이션 */
-.vessel-list-text {
+/* 💡 호버 글씨 박스 애니메이션 */
+.hover-text {
   position: absolute;
   top: 50%;
-  right: 55px; /* 버튼 왼쪽에 위치 */
-  transform: translateY(-50%) translateX(10px); /* 초기 위치: 오른쪽으로 살짝 밀어둠 */
-  opacity: 0; /* 초기 상태: 투명 */
+  right: 55px;
+  transform: translateY(-50%) translateX(10px);
+  opacity: 0;
   background-color: rgba(0, 0, 0, 0.7);
   color: #ffffff;
   padding: 5px 10px;
   border-radius: 4px;
   font-size: 12px;
-  white-space: nowrap; /* 줄바꿈 방지 */
-  transition: opacity 0.3s ease, transform 0.3s ease; /* 애니메이션 효과 설정 */
-  pointer-events: none; /* 텍스트 박스가 마우스 이벤트를 방해하지 않도록 설정 */
+  white-space: nowrap;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
 }
 
-/* 💡 추가: 호버 시 글씨 박스 애니메이션 */
-.vessel-list-toggle:hover .vessel-list-text {
-  opacity: 1; /* 투명도 원상복구 */
-  transform: translateY(-50%) translateX(0); /* 제자리로 이동 */
+.side-toggle-btn:hover .hover-text {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
 }
 
-/* 선박 리스트가 토글 버튼 아래에 뜨도록 감싸는 래퍼 */
-.vessel-list-wrapper {
+/* 💡 팝업 래퍼: 버튼을 가리지 않게 버튼 왼쪽(right: 85px)으로 위치 조정 */
+.popup-wrapper {
   position: absolute;
-  top: 115px;
-  right: 30px;
+  right: 85px;
   z-index: 1000;
 }
 
-/* 기존 VesselList 컴포넌트 내부에 left, bottom 속성이 하드코딩 되어 있을 경우를 대비해,
-  최상단 엘리먼트의 위치를 relative로 강제 초기화하여 wrapper의 위치에 맞춥니다.
-*/
-.vessel-list-wrapper :deep(> *) {
+.wrapper-list { top: 60px; }
+.wrapper-search { top: 115px; }
+
+/* 래퍼 내부 컴포넌트 강제 리셋 */
+.popup-wrapper :deep(> *) {
   position: relative !important;
   inset: auto !important;
   margin: 0 !important;

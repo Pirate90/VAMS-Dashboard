@@ -40,9 +40,9 @@ import ToolBar from '@/components/common/ToolBar'
 import MainMap from '@/components/common/MainMap'
 import DatetimeSelector from '@/components/common/DatetimeSelector'
 import ImgList from '@/components/common/ImgList'
-import VesselInformation from '@/components/VesselInformation'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import DistrictmapConfig from '@/components/DistrictmapConfig'
+import VesselInformation from '@/components/common/VesselInformation'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
+import DistrictmapConfig from '@/components/common/DistrictmapConfig'
 
 const map = ref()
 const vesselInfo = ref()

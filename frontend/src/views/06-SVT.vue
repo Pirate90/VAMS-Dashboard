@@ -26,12 +26,12 @@
 
 <script setup>
 import { ref } from 'vue'
-import ToolBar from '@/components/tracing/ToolBar'
-import MainMap from '@/components/tracing/MainMap'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import DistrictmapConfig from '@/components/DistrictmapConfig'
-import TracingPopup from '@/components/tracing/TracingPopup.vue'
-import ImgList from '@/components/tracing/ImgList.vue'
+import ToolBar from '@/components/common/ToolBar'
+import MainMap from '@/components/common/MainMap'
+import ImgList from '@/components/common/ImgList.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
+import DistrictmapConfig from '@/components/common/DistrictmapConfig'
+import TracingPopup from '@/components/06-SVT/TracingPopup.vue'
 
 const map = ref()
 

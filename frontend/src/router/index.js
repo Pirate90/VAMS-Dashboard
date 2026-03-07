@@ -94,7 +94,7 @@ router.beforeEach((to, from, next) => {
   const token = getCookie('token')
 
   if (token) {
-    // 토큰이 있으면 만료 시간 연장 (예: 10분)
+    // 토큰이 있으면 만료 시간 연장
     document.cookie = `token=${token}; max-age=60000; path=/`
   }
 

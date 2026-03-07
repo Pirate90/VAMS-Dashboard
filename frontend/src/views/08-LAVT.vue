@@ -28,12 +28,12 @@
 
 <script setup>
 import { ref } from 'vue'
-import ToolBar from '@/components/01-LVD/ToolBar'
-import MainMap from '@/components/01-LVD/MainMap'
-import DatetimeSelector from '@/components/01-LVD/DatetimeSelector'
-import VesselInformation from '@/components/VesselInformation'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import DistrictmapConfig from '@/components/DistrictmapConfig'
+import ToolBar from '@/components/common/ToolBar'
+import MainMap from '@/components/common/MainMap'
+import DatetimeSelector from '@/components/common/DatetimeSelector'
+import VesselInformation from '@/components/common/VesselInformation'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
+import DistrictmapConfig from '@/components/common/DistrictmapConfig'
 
 const map = ref()
 const vesselInfo = ref()

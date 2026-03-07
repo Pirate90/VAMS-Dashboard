@@ -18,7 +18,7 @@ import ToolBar from '@/components/fishing/ToolBar'
 import MainMap from '@/components/fishing/MainMap'
 import WorkflowPopup from '@/components/fishing/WorkflowPopup'
 import DateSelector from '@/components/fishing/DateSelector'
-import LoadingSpinner from '@/components/LoadingSpinner'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
 
 const map = ref()
 const isLoading = ref(false)

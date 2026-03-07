@@ -57,8 +57,8 @@
 </template>
 
 <script setup>
-import { ref, defineEmits, watch } from 'vue'
-import RequestPopup from '@/components/RequestPopup.vue'
+import { ref, defineEmits, watch, defineExpose } from 'vue'
+import RequestPopup from '@/components/common/RequestPopup.vue'
 
 // 💡 'close:popups' 이벤트를 추가로 정의합니다.
 const emit = defineEmits(['section:change', 'trenchmap:change', 'filter:change', 'districtmapconfig:toggle', 'imglist:toggle', 'toolbar:draw', 'close:popups'])
@@ -120,6 +120,15 @@ function onClickTrenchmap (t) {
   emit('trenchmap:change', t)
   showTrenchmaps.value = false
 }
+
+defineExpose({
+  closePopups: () => {
+    showTrenchmaps.value = false
+    showPorts.value = false
+    showFilters.value = false
+    displayRequest.value = false
+  }
+})
 </script>
 
 <style scoped>
@@ -128,7 +137,7 @@ section {
   width: 100%;
   height: 40px;
   background: #222222;
-  z-index: 999;
+  z-index: 2000; /* 💡 999에서 2000으로 수정 */
   top: 0;
   right: 0;
   padding: 0 30px;
@@ -174,7 +183,7 @@ section {
   border: 1px solid #444;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-  z-index: 1000;
+  z-index: 2001; /* 💡 1000에서 2001로 수정 */
   white-space: nowrap;
 }
 

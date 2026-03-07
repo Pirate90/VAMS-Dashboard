@@ -33,8 +33,8 @@ import ToolBar from '@/components/decision/ToolBar'
 import MainMap from '@/components/decision/MainMap'
 import DatetimeSelector from '@/components/decision/DatetimeSelector'
 import ServicePopup from '@/components/decision/ServicePopup'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import DistrictmapConfig from '@/components/DistrictmapConfig'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
+import DistrictmapConfig from '@/components/common/DistrictmapConfig'
 
 const map = ref()
 const vesselInfo = ref()
