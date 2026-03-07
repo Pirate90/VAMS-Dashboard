@@ -30,7 +30,7 @@ export default function Img (map) {
 
       const corners = extractImageExtent(info.metadata.features[0].properties)
       imgLayer.setImages([
-        { url: `/tracing/img/${info.name}/${type}.jpg`, extent: corners, opacity: 1 }
+        { url: `/services/06-svt/img/${info.name}/${type}.jpg`, extent: corners, opacity: 1 }
       ])
 
       const { center_lat: centerLat, center_lon: centerLon } = info.metadata.features[0].properties

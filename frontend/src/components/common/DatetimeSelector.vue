@@ -37,7 +37,7 @@
 <script setup>
 import { onMounted, ref, computed, defineEmits } from 'vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
-import { doubtApi } from '@/apis'
+import { vesselApi } from '@/apis'
 
 const emit = defineEmits(['change:datetime'])
 
@@ -57,7 +57,7 @@ const timeConverted = computed(() => {
 })
 
 onMounted(async () => {
-  const { min, max } = await doubtApi.getMinMaxDate()
+  const { min, max } = await vesselApi.getMinMaxDate()
   minDate.value = new Date(min)
   maxDate.value = new Date(max)
 

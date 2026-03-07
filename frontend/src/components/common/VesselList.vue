@@ -44,7 +44,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { doubtApi } from '@/apis'
+import { vesselApi } from '@/apis'
 // 💡 VesselInformation 임포트 삭제 완료
 
 const props = defineProps({
@@ -75,7 +75,7 @@ watch(() => props.list, () => {
 
 watch(currentVessel, async (vessel) => {
   if (vessel) {
-    await doubtApi.getMinMaxDateByVessel(vessel.mmsi)
+    await vesselApi.getMinMaxDateByVessel(vessel.mmsi)
     emit('info:show', vessel)
   } else {
     emit('info:hide')

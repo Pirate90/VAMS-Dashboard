@@ -11,7 +11,7 @@ import Trenchmap from '@/util/maptalks/trenchmap'
 import Districtmap from '@/util/maptalks/districtmap'
 import Trajectory from '@/util/maptalks/trajectory'
 
-import { doubtApi } from '@/apis'
+import { vesselApi } from '@/apis'
 
 const emit = defineEmits(['info:show', 'data:load'])
 let map = null
@@ -57,7 +57,7 @@ defineExpose({
   changeDatetime: async (start, end, today, tomorrow) => {
     startDate = today
     endDate = tomorrow
-    const data = await doubtApi.getData(start, end)
+    const data = await vesselApi.getData(start, end)
     setTimeout(() => {
       vessel.changeDateTime(data)
       emit('data:load')
@@ -87,7 +87,7 @@ defineExpose({
   },
   showTrajectory: async (mmsi) => {
     // 0226 까지만 데이터 있음
-    const data = await doubtApi.getTrajectory(mmsi, startDate.slice(0, 8) + '000000', endDate.slice(0, 8) + '000000')
+    const data = await vesselApi.getTrajectory(mmsi, startDate.slice(0, 8) + '000000', endDate.slice(0, 8) + '000000')
     const geojson = {
       type: 'Feature',
       properties: {},

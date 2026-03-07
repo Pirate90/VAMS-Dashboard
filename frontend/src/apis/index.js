@@ -1,17 +1,20 @@
+// src/apis/index.js
 import axios from 'axios'
-import createDoubtApi from './doubt'
-import createIuuApi from './iuu'
-import createDistrictmapApi from './districtmap'
-import createRequestApi from './request'
-import createTracingApi from './tracing'
 
+// 각 기능별 팩토리 함수 임포트
+import createVesselApi from './vessel'
+import createVamsServicesApi from './services'
+import createWorkflowApi from './workflow'
+import createDistrictmapApi from './districtmap'
+
+// 해구도 조회 (단일 함수 형태 유지)
 export async function getTrenchmap (type) {
   const { data } = await axios.get(`/trenchmap/${type}.geojson`)
   return data
 }
 
-export const doubtApi = createDoubtApi(axios)
-export const iuuApi = createIuuApi(axios)
+// API 인스턴스 생성 및 Export
+export const vesselApi = createVesselApi(axios)
+export const vamsApi = createVamsServicesApi(axios)
+export const workflowApi = createWorkflowApi(axios)
 export const districtmapApi = createDistrictmapApi(axios)
-export const requestApi = createRequestApi(axios)
-export const tracingApi = createTracingApi(axios)

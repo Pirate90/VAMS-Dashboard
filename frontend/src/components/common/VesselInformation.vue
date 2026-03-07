@@ -96,7 +96,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { doubtApi } from '@/apis'
+import { vesselApi } from '@/apis'
 
 const NAV_STATUS = [
   'Under way using its engine',
@@ -130,12 +130,12 @@ const dateByVessel = ref(null)
 const showNavStatus = ref(false)
 
 onMounted(async () => {
-  dateByVessel.value = await doubtApi.getMinMaxDateByVessel(props.vessel.mmsi)
+  dateByVessel.value = await vesselApi.getMinMaxDateByVessel(props.vessel.mmsi)
 })
 
 watch(() => props.vessel, async (c, o) => {
   if (c) {
-    dateByVessel.value = await doubtApi.getMinMaxDateByVessel(c.mmsi)
+    dateByVessel.value = await vesselApi.getMinMaxDateByVessel(c.mmsi)
   } else {
     dateByVessel.value = null
     if (o) emit('info:normalize', o.vesselid)

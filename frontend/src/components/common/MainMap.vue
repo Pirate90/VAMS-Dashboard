@@ -34,7 +34,7 @@ import Img from '@/util/maptalks/img'
 import VesselList from '@/components/common/VesselList'
 import VesselSearch from '@/components/common/VesselSearch'
 import * as maptalks from 'maptalks'
-import { doubtApi } from '@/apis'
+import { vesselApi } from '@/apis'
 
 const emit = defineEmits(['info:show', 'data:load', 'draw:completed', 'popup:open'])
 
@@ -148,7 +148,7 @@ defineExpose({
     startDate = today
     endDate = tomorrow
 
-    const data = await doubtApi.getData(start, end)
+    const data = await vesselApi.getData(start, end)
     const targetData = Array.isArray(data) ? data : (data?.data || [])
 
     // 💡 1. 노이즈 데이터 필터링: 선박명(shipname)이나 국가(flagcountry) 정보가 없는 데이터 제외
@@ -207,7 +207,7 @@ defineExpose({
   },
   showTrajectory: async (mmsi) => {
     // 0226 까지만 데이터 있음
-    const data = await doubtApi.getTrajectory(mmsi, startDate.slice(0, 8) + '000000', endDate.slice(0, 8) + '000000')
+    const data = await vesselApi.getTrajectory(mmsi, startDate.slice(0, 8) + '000000', endDate.slice(0, 8) + '000000')
     const geojson = {
       type: 'Feature',
       properties: {},

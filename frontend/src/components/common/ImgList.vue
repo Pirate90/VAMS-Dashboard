@@ -10,7 +10,7 @@
             <button @click="onClickImg(i, 'result')" style="width: 100px;">MV-Tracing</button>
           </div>
         </div>
-        <img :src="`/tracing/img/${i.name}/convert.jpg`" alt="">
+        <img :src="`/services/06-svt/img/${i.name}/convert.jpg`" alt="">
       </div>
     </section>
   </Transition>
@@ -18,7 +18,7 @@
 
 <script setup>
 import { defineProps, onMounted, ref, defineEmits } from 'vue'
-import { tracingApi } from '@/apis'
+import { vamsApi } from '@/apis'
 
 const props = defineProps({
   show: {
@@ -34,7 +34,7 @@ const currentImg = ref('')
 const currentType = ref('')
 
 onMounted(async () => {
-  imgList.value = await tracingApi.getList()
+  imgList.value = await vamsApi['06-svt'].getList()
 })
 
 function onClickImg (i, type) {

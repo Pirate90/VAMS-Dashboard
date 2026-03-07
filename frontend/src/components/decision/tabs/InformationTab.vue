@@ -88,7 +88,7 @@
 
 <script setup>
 import { ref, defineProps, defineEmits, watch, onMounted } from 'vue'
-import { doubtApi } from '@/apis'
+import { vesselApi } from '@/apis'
 
 const props = defineProps({
   vessel: {
@@ -122,7 +122,7 @@ const showNavStatus = ref(false)
 const dateByVessel = ref(null)
 
 watch(() => props.vessel, async (c, o) => {
-  if (c) dateByVessel.value = await doubtApi.getMinMaxDateByVessel(c.mmsi)
+  if (c) dateByVessel.value = await vesselApi.getMinMaxDateByVessel(c.mmsi)
   else {
     dateByVessel.value = null
     emit('info:normalize', o.vesselid)
@@ -130,10 +130,10 @@ watch(() => props.vessel, async (c, o) => {
 })
 
 onMounted(async () => {
-  dateByVessel.value = await doubtApi.getMinMaxDateByVessel(props.vessel.mmsi)
+  dateByVessel.value = await vesselApi.getMinMaxDateByVessel(props.vessel.mmsi)
 })
 watch(() => props.vessel, async (c, o) => {
-  if (c) dateByVessel.value = await doubtApi.getMinMaxDateByVessel(c.mmsi)
+  if (c) dateByVessel.value = await vesselApi.getMinMaxDateByVessel(c.mmsi)
   else {
     dateByVessel.value = null
     emit('info:normalize', o.vesselid)

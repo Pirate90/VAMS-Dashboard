@@ -36,7 +36,7 @@
     </div>
     <div class="result-popup" v-if="displayResult">
       <button @click="displayResult = false"><f-a-icon icon="x" /></button>
-      <img :src="`/tracing/img/${currentResult}/result.png`" alt="">
+      <img :src="`/services/06-svt/img/${currentResult}/result.png`" alt="">
     </div>
   </main>
 </template>

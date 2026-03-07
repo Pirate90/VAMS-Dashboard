@@ -41,7 +41,7 @@
 <script setup>
 import { ref } from 'vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
-import { requestApi } from '@/apis'
+import { vamsApi } from '@/apis'
 
 const today = new Date()
 today.setHours(0)
@@ -55,7 +55,7 @@ const collapse = ref(false)
 const explResult = ref({})
 
 async function onClickRequest () {
-  explResult.value = await requestApi.getExplanation()
+  explResult.value = await vamsApi['10-lvad'].getExplanation()
   collapse.value = true
 }
 

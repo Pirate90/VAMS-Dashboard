@@ -16,9 +16,10 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/tiles', express.static(path.join(__dirname, 'tileset')))
 app.use('/trenchmap', express.static(path.join(__dirname, 'trenchmap')))
+
+// API 라우터 연결
 app.use('/districtmap', require('./apis/districtmap/router')(express.static, express.Router, httpErr))
-app.use('/doubt', require('./apis/doubt/router')(express.Router, httpErr))
-app.use('/iuu', require('./apis/iuu/router')(express.Router, httpErr))
-app.use('/tracing', require('./apis/tracing/router')(express.Router, httpErr))
+app.use('/vessel', require('./apis/vessel/router')(express.Router, httpErr))       // 💡 일반 선박 API
+app.use('/services', require('./apis/services/router')(express.Router, httpErr))   // 💡 10대 VAMS 서비스 API
 
 module.exports = app

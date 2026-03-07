@@ -103,7 +103,7 @@
 <script setup>
 import { ref, computed, watch, defineEmits, defineProps } from 'vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
-import { requestApi } from '@/apis'
+import { workflowApi } from '@/apis'
 
 const props = defineProps({
   selectedCoords: Array
@@ -189,7 +189,7 @@ const jobList = ref([])
 watch(currentTab, async (v) => {
   if (v === 'list') {
     // API 구조에 맞게 selectedCategory.value 등을 활용하여 호출
-    jobList.value = await requestApi.getDoubtList()
+    jobList.value = await workflowApi.roic.getList()
   }
 })
 </script>

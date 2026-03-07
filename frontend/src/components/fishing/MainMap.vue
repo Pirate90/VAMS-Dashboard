@@ -20,7 +20,7 @@ import HeatmapConfig from '@/components/fishing/HeatmapConfig'
 import VesselList from '@/components/common/VesselList'
 import * as maptalks from 'maptalks' // 추가
 
-import { iuuApi } from '@/apis'
+import { vesselApi } from '@/apis'
 
 const emit = defineEmits(['data:load', 'data:loadstart'])
 
@@ -91,7 +91,7 @@ function hideVesselMarker () {
 
 async function showTrajectory (mmsi) {
   emit('data:loadstart')
-  const data = await iuuApi.getTrajectory(mmsi, startDate, endDate)
+  const data = await vesselApi.getTrajectory(mmsi, startDate, endDate)
   const geojson = {
     type: 'Feature',
     properties: {},
@@ -119,7 +119,7 @@ defineExpose({
   changeDate: async (start, end) => {
     startDate = start
     endDate = end
-    vesselList.value = await iuuApi.getList(start, end)
+    vesselList.value = await vesselApi.getList(start, end)
     vesselList.value.sort((a, b) => {
       const aIncludes = a.flagcountry.includes('Korea')
       const bIncludes = b.flagcountry.includes('Korea')
@@ -127,7 +127,7 @@ defineExpose({
       else if (!aIncludes && bIncludes) return 1
       else return 0
     })
-    const data = await iuuApi.getData(start, end)
+    const data = await vesselApi.getData(start, end)
     heatmap.changeData(data)
     emit('data:load')
   },
