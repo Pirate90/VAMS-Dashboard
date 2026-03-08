@@ -5,6 +5,7 @@
       v-bind="contextMenu"
       @close="closeContextMenu"
       @select="onClickContextMenuItem"
+      @stats="onStatsClick"
     />
     <button class="side-toggle-btn btn-list" :class="{ active: showVesselList }" @click="toggleVesselList">
       <img src="@/assets/ship-icon.png" alt="ship" class="tool-icon" />
@@ -29,7 +30,7 @@
 </template>
 
 <script setup>
-import { onMounted, defineExpose, defineEmits, ref } from 'vue'
+import { onMounted, defineExpose, defineEmits, ref, markRaw } from 'vue'
 import initMap from '@/util/maptalks/map'
 import Vessel from '@/util/maptalks/vessel'
 import Trenchmap from '@/util/maptalks/trenchmap'
@@ -68,6 +69,68 @@ const contextMenu = ref({
 })
 const closeContextMenu = () => { contextMenu.value.show = false }
 
+// 💡 점멸 애니메이션 상태 관리 변수
+let blinkInterval = null
+let currentBlinkingGeom = null
+let originalSymbolCache = null
+
+// 💡 점멸 효과 초기화 함수
+const clearBlink = () => {
+  if (blinkInterval) {
+    clearInterval(blinkInterval)
+    blinkInterval = null
+  }
+  if (currentBlinkingGeom && originalSymbolCache) {
+    currentBlinkingGeom.setSymbol(originalSymbolCache)
+  }
+  currentBlinkingGeom = null
+  originalSymbolCache = null
+}
+
+const onClickContextMenuItem = (item) => {
+  clearBlink()
+
+  if (!item.geometry) return
+
+  currentBlinkingGeom = item.geometry
+  originalSymbolCache = currentBlinkingGeom.getSymbol() || {}
+
+  let count = 0
+  const maxFlashes = 6 // 3번 깜빡임 (0,2,4: 강조 / 1,3,5: 원상복구)
+
+  blinkInterval = setInterval(() => {
+    if (count >= maxFlashes) {
+      clearBlink() // 완료 후 원래대로 복구
+      return
+    }
+
+    if (count % 2 === 0) {
+      // 투명한 빨간색으로 시각적 강조
+      currentBlinkingGeom.setSymbol({
+        polygonFill: '#F3463D',
+        polygonOpacity: 0.6,
+        lineWidth: 3,
+        lineColor: '#FFFFFF'
+      })
+    } else {
+      // 원래 색상으로 복구
+      currentBlinkingGeom.setSymbol(originalSymbolCache)
+    }
+    count++
+  }, 300) // 0.3초 간격
+}
+
+// 💡 통계 버튼 클릭 시 동작할 함수
+const onStatsClick = (data) => {
+  const { period, item } = data
+  const periodMap = { daily: '일간', weekly: '주간', monthly: '월간' }
+
+  console.log(`[${periodMap[period]} 통계 요청] 구역: ${item.value}`)
+
+  // TODO: 여기에 실제 통계 데이터 API 호출 및 차트 팝업 로직을 연결하시면 됩니다.
+  alert(`${item.value}의 ${periodMap[period]} 통계를 불러옵니다.`)
+}
+
 onMounted(async () => {
   map = initMap()
   trenchmap = await Trenchmap(map)
@@ -99,6 +162,8 @@ onMounted(async () => {
   map.on('contextmenu', (e) => {
     if (e.domEvent) e.domEvent.preventDefault()
 
+    clearBlink() // 새 메뉴 열 때 점멸 초기화
+
     contextMenu.value.x = e.containerPoint.x
     contextMenu.value.y = e.containerPoint.y
     contextMenu.value.coord = [e.coordinate.x, e.coordinate.y]
@@ -113,48 +178,47 @@ onMounted(async () => {
           const props = geometry.getProperties()
           if (!props) return
 
-          // 💡 숫자를 정수로 변환하는 헬퍼 함수
           const toInt = (val) => val !== undefined && val !== null ? Math.floor(Number(val)) : null
 
-          // 1. 해구도 처리 (HAEGU_NO 속성 확인)
+          // 💡 핵심: 점멸 효과를 위해 geometry 자체를 markRaw로 포장하여 메뉴 항목에 삽입
+          const geomRaw = markRaw(geometry)
+
           if (props.HAEGU_NO !== undefined && props.HAEGU_NO !== null) {
             const haeguNo = toInt(props.HAEGU_NO)
-
             if (props.SUB_NO !== undefined && props.SUB_NO !== null) {
-              // 소해구 (예: 11-1 해구)
               const subNo = toInt(props.SUB_NO)
               contextMenu.value.items.push({
                 type: 'trench-sm',
                 typeLabel: '소해구',
-                value: `${haeguNo}-${subNo} 해구`
+                value: `${haeguNo}-${subNo} 해구`,
+                geometry: geomRaw
               })
             } else {
-              // 대해구 (예: 857 해구)
               contextMenu.value.items.push({
                 type: 'trench-lg',
                 typeLabel: '대해구',
-                value: `${haeguNo} 해구`
+                value: `${haeguNo} 해구`,
+                geometry: geomRaw
               })
             }
           }
 
-          // 2. 일반 구역도 및 해경 관할구역 처리 (NAME 속성 확인)
           if (props.NAME !== undefined && props.NAME !== null) {
             const nameStr = String(props.NAME)
-
             if (nameStr.includes('해양경찰서')) {
               contextMenu.value.items.push({
                 type: 'coastguard',
                 typeLabel: '관할구역',
-                value: nameStr
+                value: nameStr,
+                geometry: geomRaw
               })
             } else {
-              // 소해구 데이터의 NAME(숫자)이 일반 구역도로 뜨는 것 방지
               if (isNaN(Number(nameStr))) {
                 contextMenu.value.items.push({
                   type: 'district',
                   typeLabel: '구역도',
-                  value: nameStr
+                  value: nameStr,
+                  geometry: geomRaw
                 })
               }
             }
@@ -163,18 +227,17 @@ onMounted(async () => {
       }
     })
 
-    // 중복 제거 및 메뉴 표시
     const uniqueItems = Array.from(new Map(contextMenu.value.items.map(item => [item.value, item])).values())
     contextMenu.value.items = uniqueItems
     contextMenu.value.show = true
   })
-  map.on('mousedown movestart zoomstart', closeContextMenu)
-})
 
-function onClickContextMenuItem (item) {
-  console.log('선택된 정보:', item)
-  closeContextMenu()
-}
+  // 지도 드래그나 클릭 시 메뉴 및 점멸 초기화
+  map.on('mousedown movestart zoomstart', () => {
+    closeContextMenu()
+    clearBlink()
+  })
+})
 
 function onClickVessel ({ coord, elements, isChild }) {
   map.animateTo({ zoom: 10, center: [coord.x, coord.y] }, {
