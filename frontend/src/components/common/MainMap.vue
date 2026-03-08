@@ -1,6 +1,11 @@
 <template>
   <div class="main-map-container">
     <div id="map" class="map"></div>
+    <MapContextMenu
+      v-bind="contextMenu"
+      @close="closeContextMenu"
+      @select="onClickContextMenuItem"
+    />
     <button class="side-toggle-btn btn-list" :class="{ active: showVesselList }" @click="toggleVesselList">
       <img src="@/assets/ship-icon.png" alt="ship" class="tool-icon" />
       <span class="hover-text">선박 목록</span>
@@ -33,6 +38,7 @@ import Trajectory from '@/util/maptalks/trajectory'
 import Img from '@/util/maptalks/img'
 import VesselList from '@/components/common/VesselList'
 import VesselSearch from '@/components/common/VesselSearch'
+import MapContextMenu from '@/components/common/MapContextMenu'
 import * as maptalks from 'maptalks'
 import { vesselApi } from '@/apis'
 
@@ -53,6 +59,14 @@ let animationId = null // 선박 이동 애니메이션 제어용 변수
 const vesselList = ref([])
 const showVesselList = ref(false)
 const showVesselSearch = ref(false)
+const contextMenu = ref({
+  show: false,
+  x: 0,
+  y: 0,
+  coord: [0, 0],
+  items: []
+})
+const closeContextMenu = () => { contextMenu.value.show = false }
 
 onMounted(async () => {
   map = initMap()
@@ -82,7 +96,85 @@ onMounted(async () => {
     emit('draw:completed', coords)
     drawTool.disable()
   })
+  map.on('contextmenu', (e) => {
+    if (e.domEvent) e.domEvent.preventDefault()
+
+    contextMenu.value.x = e.containerPoint.x
+    contextMenu.value.y = e.containerPoint.y
+    contextMenu.value.coord = [e.coordinate.x, e.coordinate.y]
+    contextMenu.value.items = []
+
+    const layers = map.getLayers()
+    layers.forEach(layer => {
+      if (layer instanceof maptalks.VectorLayer) {
+        const hits = layer.identify(e.coordinate)
+
+        hits.forEach(geometry => {
+          const props = geometry.getProperties()
+          if (!props) return
+
+          // 💡 숫자를 정수로 변환하는 헬퍼 함수
+          const toInt = (val) => val !== undefined && val !== null ? Math.floor(Number(val)) : null
+
+          // 1. 해구도 처리 (HAEGU_NO 속성 확인)
+          if (props.HAEGU_NO !== undefined && props.HAEGU_NO !== null) {
+            const haeguNo = toInt(props.HAEGU_NO)
+
+            if (props.SUB_NO !== undefined && props.SUB_NO !== null) {
+              // 소해구 (예: 11-1 해구)
+              const subNo = toInt(props.SUB_NO)
+              contextMenu.value.items.push({
+                type: 'trench-sm',
+                typeLabel: '소해구',
+                value: `${haeguNo}-${subNo} 해구`
+              })
+            } else {
+              // 대해구 (예: 857 해구)
+              contextMenu.value.items.push({
+                type: 'trench-lg',
+                typeLabel: '대해구',
+                value: `${haeguNo} 해구`
+              })
+            }
+          }
+
+          // 2. 일반 구역도 및 해경 관할구역 처리 (NAME 속성 확인)
+          if (props.NAME !== undefined && props.NAME !== null) {
+            const nameStr = String(props.NAME)
+
+            if (nameStr.includes('해양경찰서')) {
+              contextMenu.value.items.push({
+                type: 'coastguard',
+                typeLabel: '관할구역',
+                value: nameStr
+              })
+            } else {
+              // 소해구 데이터의 NAME(숫자)이 일반 구역도로 뜨는 것 방지
+              if (isNaN(Number(nameStr))) {
+                contextMenu.value.items.push({
+                  type: 'district',
+                  typeLabel: '구역도',
+                  value: nameStr
+                })
+              }
+            }
+          }
+        })
+      }
+    })
+
+    // 중복 제거 및 메뉴 표시
+    const uniqueItems = Array.from(new Map(contextMenu.value.items.map(item => [item.value, item])).values())
+    contextMenu.value.items = uniqueItems
+    contextMenu.value.show = true
+  })
+  map.on('mousedown movestart zoomstart', closeContextMenu)
 })
+
+function onClickContextMenuItem (item) {
+  console.log('선택된 정보:', item)
+  closeContextMenu()
+}
 
 function onClickVessel ({ coord, elements, isChild }) {
   map.animateTo({ zoom: 10, center: [coord.x, coord.y] }, {
