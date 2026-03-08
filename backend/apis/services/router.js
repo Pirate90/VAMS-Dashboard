@@ -19,5 +19,8 @@ module.exports = function createServicesRouter (Router, errHandler) {
   router.get('/06-svt/list', controller.getSvtListController)
   router.get('/06-svt/img/:dir/:file', controller.getSvtImgController) // 이미지 파일 서빙 라우트
 
+  // 시공간 궤적 예측 요청 라우트
+  router.post('/06-svt/predict', controller.reqSvtPredictController)
+
   return router
 }

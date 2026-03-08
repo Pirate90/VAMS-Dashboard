@@ -222,6 +222,47 @@ defineExpose({
   hideTrajectory: () => {
     trajectory.hide()
   },
+  // AI 예상 궤적을 맵에 그리는 함수
+  showPredictedTrajectory: (predictData) => {
+    // VesselInformation에서 넘겨준 두 개의 배열을 받습니다
+    const { input, predicted } = predictData
+    const geometries = [] // 맵에 그릴 도형들을 담을 배열
+    // 1. 과거(입력) 궤적 그리기 (파란색 실선)
+    if (input && input.length > 0) {
+      // [Lat, Lon] -> GeoJSON 스펙인 [Lon, Lat] 변환
+      const inputCoords = input.map(d => [d[1], d[0]])
+      const inputLine = new maptalks.LineString(inputCoords, {
+        symbol: {
+          lineColor: '#275FCE', // 파란색 계열
+          lineWidth: 4
+          // 실선이므로 lineDasharray는 생략
+        }
+      })
+      geometries.push(inputLine)
+    }
+    // 2. 미래(예측) 궤적 그리기 (빨간색 점선)
+    if (predicted && predicted.length > 0) {
+      // [Lat, Lon] -> [Lon, Lat] 변환
+      const predictedCoords = predicted.map(d => [d[1], d[0]])
+      const predictedLine = new maptalks.LineString(predictedCoords, {
+        symbol: {
+          lineColor: '#F3463D', // 붉은색 계열
+          lineWidth: 4,
+          lineDasharray: [10, 6] // 점선 효과
+        }
+      })
+      geometries.push(predictedLine)
+    }
+    // 그릴 데이터가 아예 없다면 종료
+    if (geometries.length === 0) return
+    // 3. 기존 레이어를 비우고 과거 실선과 미래 점선 2개를 한 번에 올림
+    drawLayer.clear().addGeometry(geometries)
+    // 4. 카메라 시점 이동 (미래 예측의 첫 번째 지점을 중심으로 잡음)
+    const centerCoord = predicted && predicted.length > 0
+      ? [predicted[0][1], predicted[0][0]]
+      : [input[input.length - 1][1], input[input.length - 1][0]]
+    map.animateTo({ center: centerCoord, zoom: 11 }, { duration: 500, easing: 'out' })
+  },
   startDraw: () => {
     drawLayer.clear()
     drawTool.enable()

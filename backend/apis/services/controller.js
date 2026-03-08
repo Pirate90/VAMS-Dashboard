@@ -35,6 +35,11 @@ module.exports = function createServicesController (service, errHandler) {
         if (err) return next(errHandler(404, 'Image not found'))
         res.sendFile(imagePath)
       })
+    },
+    // 시공간 궤적 예측 컨트롤러 추가
+    reqSvtPredictController: async (req, res, next) => {
+      try { res.send(await service.reqSvtPredictService(req.body)) } 
+      catch (e) { next(errHandler(500, e)) }
     }
   }
 }

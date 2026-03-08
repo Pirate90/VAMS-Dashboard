@@ -27,10 +27,12 @@
       ></MainMap>
       <VesselInformation ref="vesselInfo" v-if="show"
         :vessel="currentVessel"
+        :dashboard-time="currentDashboardTime"
         @info:close="closeVesselInfo"
         @info:highlight="map.highlight"
         @info:normalize="map.normalize"
         @info:trajectory="showTrajectory"
+        @info:predict="onShowPredictedTrajectory"
       ></VesselInformation>
       <DatetimeSelector @change:datetime="onChangeDatetime"></DatetimeSelector>
     </div>
@@ -60,10 +62,21 @@ const showDistrictmapConfig = ref(false)
 const showImgList = ref(false)
 const displayResult = ref(false)
 const currentResult = ref('')
-// vesselList 참조 변수는 이곳에서 사용되지 않으므로 제거했습니다.
 const currentVessel = ref({})
 const show = ref(false)
 const selectedCoords = ref(null)
+
+const currentDashboardTime = ref('') // 대시보드 타임라인의 현재 시간 저장용
+
+// 타임 슬라이더에서 'change:datetime' 이벤트가 올라왔을 때 실행되는 함수
+function onChangeDatetime (start, end, today, tomorrow) {
+  // 1. 슬라이더의 시작 시간을 대시보드 현재 시간으로 저장 (AI 궤적 예측용)
+  currentDashboardTime.value = start
+  // 2. 로딩 스피너 활성화
+  isLoading.value = true
+  // 3. 지도 컴포넌트에 시간 변경 알림 (데이터 로드)
+  map.value?.changeDatetime(start, end, today, tomorrow)
+}
 
 // 1. 팝업에서 "구역 설정" 클릭 시 호출
 function handleStartDraw () {
@@ -86,11 +99,6 @@ function onChangeTrenchmap (t) {
 
 function onChangeFilter (f) {
   map.value.changeFilter(f)
-}
-
-function onChangeDatetime (start, end, today, tomorrow) {
-  isLoading.value = true
-  map.value.changeDatetime(start, end, today, tomorrow)
 }
 
 function onChangeDistrictmapConfig (e) {
@@ -128,6 +136,10 @@ function closeVesselInfo (id) {
 function showTrajectory (mmsi) {
   isLoading.value = true
   map.value.showTrajectory(mmsi)
+}
+
+function onShowPredictedTrajectory (predictData) {
+  map.value.showPredictedTrajectory(predictData)
 }
 
 function onToggleDistrictmap () {

@@ -29,6 +29,11 @@ export default function createVamsServicesApi (http) {
       getList: async () => {
         const { data } = await http.get('/services/06-svt/list')
         return data
+      },
+      // 궤적 예측 요청 API
+      predict: async (payload) => {
+        const { data } = await http.post('/services/06-svt/predict', payload)
+        return data
       }
     },
 

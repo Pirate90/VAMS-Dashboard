@@ -1,6 +1,7 @@
 const { Client } = require('pg')
 const fs = require('fs')
 const path = require('path')
+const axios = require('axios')
 
 // 로컬 JSON 파일 임포트 (경로는 실제 위치에 맞게 수정 필요)
 const loitering = require('../../example/df_loitering_behavior.json')
@@ -12,7 +13,7 @@ client.connect()
 module.exports = function createServicesService () {
   return {
     // ==========================================
-    // [01-LVD] 관심지역 의심선박 분류 (구 doubt)
+    // [01-LVD] 관심지역 의심선박 분류
     // ==========================================
     getLvdDataService: async ({ start, end }) => {
       if (!start || !end) return []
@@ -72,7 +73,7 @@ module.exports = function createServicesService () {
     },
 
     // ==========================================
-    // [03-FAC] 조업/비조업 자동식별 (구 iuu)
+    // [03-FAC] 조업/비조업 자동식별
     // ==========================================
     getFacDataService: async ({ start, end }) => {
       if (!start || !end) return []
@@ -128,7 +129,7 @@ module.exports = function createServicesService () {
     },
 
     // ==========================================
-    // [06-SVT] 의심선박 시공간 추적 (구 tracing)
+    // [06-SVT] 의심선박 시공간 추적
     // ==========================================
     getSvtListService: () => {
       const list = fs.readdirSync('./multi_trajectory', { withFileTypes: true })
@@ -139,6 +140,34 @@ module.exports = function createServicesService () {
         const metadata = fs.readFileSync(path.join('./multi_trajectory', d, 'metadata.geojson'), 'utf-8')
         return { name: d, metadata: JSON.parse(metadata) }
       })
+    },
+    // AI 예측 서버로 요청 전송 (Proxy)
+    reqSvtPredictService: async (payload) => {
+      // URL 끝에 /predict 가 반드시 있어야 합니다!
+      const AI_SERVER_URL = 'http://143.248.150.68:5000/predict'
+      try {
+        console.log('🤖 AI 궤적 예측 요청:', payload)
+        // validateStatus를 추가하여 404, 400 등의 에러 코드도 catch로 빠지지 않게 막습니다.
+        const response = await axios.post(AI_SERVER_URL, payload, {
+          validateStatus: function (status) {
+            return status >= 200 && status < 500; // 500 미만의 상태 코드는 에러로 던지지 않음
+          }
+        })
+        // AI 서버가 404(데이터 없음)를 반환했을 경우의 부드러운 처리
+        if (response.status === 404) {
+          console.warn(`🚨 AI 서버 404 응답: 해당 선박(${payload.mmsi})의 과거 데이터가 없습니다.`)
+          return {
+            status: "fail",
+            message: "AI 서버에 해당 선박의 궤적 데이터가 존재하지 않습니다."
+          }
+        }
+        // 정상(200)일 경우 AI 서버의 결과값 그대로 반환
+        return response.data
+      } catch (error) {
+        // AI 서버가 아예 꺼져있거나 타임아웃 등 진짜 네트워크 통신 실패일 경우
+        console.error("🚨 AI 서버 연결 실패:", error.message)
+        throw error
+      }
     }
   }
 }
