@@ -41,8 +41,9 @@ import { vesselApi } from '@/apis'
 
 const emit = defineEmits(['change:datetime'])
 
+// 💡 슬라이더 단위를 10분에서 1분으로 변경 (0 ~ 1439분 = 24시간)
 const TIME_MIN = 0
-const TIME_MAX = 144
+const TIME_MAX = 1439
 
 const sliderInput = ref()
 const minDate = ref(new Date())
@@ -50,9 +51,10 @@ const maxDate = ref(new Date())
 const dateValue = ref(new Date())
 const timeValue = ref(10)
 
+// 💡 1분 단위 시간에 맞게 시/분 포맷 계산 로직 수정
 const timeConverted = computed(() => {
-  const h = Math.floor(timeValue.value / 6).toString().padStart(2, 0)
-  const m = timeValue.value % 6 + '0'
+  const h = String(Math.floor(timeValue.value / 60)).padStart(2, '0')
+  const m = String(timeValue.value % 60).padStart(2, '0')
   return `${h} : ${m}`
 })
 
@@ -66,29 +68,39 @@ onMounted(async () => {
 })
 
 function initDate (min, max) {
-  // const minTime = min.getTime()
-  // const maxTime = max.getTime()
-
-  // const avgTime = (minTime + maxTime) / 2
-  // const avgDate = new Date(avgTime)
-
-  // dateValue.value = new Date(new Date(avgDate).setDate(avgDate.getDate() - 1))
   dateValue.value = new Date('2024-03-10')
 }
 
-function onChangeDateTime () {
-  const y = dateValue.value.getFullYear()
-  const m = (dateValue.value.getMonth() + 1).toString().padStart(2, 0)
-  const d = dateValue.value.getDate().toString().padStart(2, 0)
-  const dt = (dateValue.value.getDate() + 1).toString().padStart(2, 0)
-  const h = Math.floor(timeValue.value / 6).toString().padStart(2, 0)
-  const mmStart = timeValue.value % 6 + '0'
-  const mmEnd = timeValue.value % 6 + 1 + '0'
+// 💡 날짜 변환 헬퍼 함수
+function formatToUtcmin (d) {
+  const y = d.getFullYear()
+  const mo = String(d.getMonth() + 1).padStart(2, '0')
+  const dt = String(d.getDate()).padStart(2, '0')
+  const h = String(d.getHours()).padStart(2, '0')
+  const m = String(d.getMinutes()).padStart(2, '0')
+  return { full: `${y}${mo}${dt}${h}${m}00`, dateOnly: `${y}${mo}${dt}000000` }
+}
 
-  const s = `${y}${m}${d}${h}${mmStart}00`
-  const e = `${y}${m}${d}${h}${mmEnd}00`
-  const today = `${y}${m}${d}000000`
-  const tomorrow = `${y}${m}${dt}000000`
+function onChangeDateTime () {
+  // 1. 선택된 기준 날짜 (자정 기준)
+  const baseDate = new Date(dateValue.value)
+  baseDate.setHours(0, 0, 0, 0)
+
+  // 2. 타겟 시간(종료 시간): 기준 날짜 + 슬라이더 분(Minute)
+  const targetTime = new Date(baseDate.getTime() + timeValue.value * 60 * 1000)
+
+  // 3. 검색 시작 시간: 타겟 시간으로부터 10분 전 (AIS 데이터 공백 방지용 Look-back Window)
+  const startTime = new Date(targetTime.getTime() - (10 * 60 * 1000))
+
+  // 4. 내일 날짜 계산
+  const tomorrowDate = new Date(baseDate.getTime() + 24 * 60 * 60 * 1000)
+
+  const s = formatToUtcmin(startTime).full
+  const e = formatToUtcmin(targetTime).full // 💡 이게 정확한 현재 슬라이더 시간입니다
+  const today = formatToUtcmin(targetTime).dateOnly
+  const tomorrow = formatToUtcmin(tomorrowDate).dateOnly
+
+  // 부모 컴포넌트로 데이터 전송
   emit('change:datetime', s, e, today, tomorrow)
 }
 </script>

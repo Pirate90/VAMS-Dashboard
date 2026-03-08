@@ -48,6 +48,7 @@ let startDate = null
 let endDate = null
 let drawTool = null
 let drawLayer = null
+let animationId = null // 선박 이동 애니메이션 제어용 변수
 
 const vesselList = ref([])
 const showVesselList = ref(false)
@@ -204,6 +205,11 @@ defineExpose({
   normalize: (id) => {
     vessel.normalize(id)
     trajectory.hide()
+    if (animationId) {
+      cancelAnimationFrame(animationId)
+      animationId = null
+    }
+    drawLayer.clear()
   },
   showTrajectory: async (mmsi) => {
     // 0226 까지만 데이터 있음
@@ -224,44 +230,116 @@ defineExpose({
   },
   // AI 예상 궤적을 맵에 그리는 함수
   showPredictedTrajectory: (predictData) => {
-    // VesselInformation에서 넘겨준 두 개의 배열을 받습니다
+    if (animationId) {
+      cancelAnimationFrame(animationId)
+      animationId = null
+    }
+
     const { input, predicted } = predictData
-    const geometries = [] // 맵에 그릴 도형들을 담을 배열
-    // 1. 과거(입력) 궤적 그리기 (파란색 실선)
+    const geometries = []
+
+    let lastInputCoord = null
+
+    // 1. 과거(입력) 궤적 (파란 실선)
     if (input && input.length > 0) {
-      // [Lat, Lon] -> GeoJSON 스펙인 [Lon, Lat] 변환
       const inputCoords = input.map(d => [d[1], d[0]])
+      lastInputCoord = inputCoords[inputCoords.length - 1]
+
       const inputLine = new maptalks.LineString(inputCoords, {
-        symbol: {
-          lineColor: '#275FCE', // 파란색 계열
-          lineWidth: 4
-          // 실선이므로 lineDasharray는 생략
-        }
+        symbol: { lineColor: '#275FCE', lineWidth: 4 }
       })
       geometries.push(inputLine)
     }
-    // 2. 미래(예측) 궤적 그리기 (빨간색 점선)
+
+    // 2. 미래(예측) 궤적 (빨간 점선)
+    let predictedCoords = []
     if (predicted && predicted.length > 0) {
-      // [Lat, Lon] -> [Lon, Lat] 변환
-      const predictedCoords = predicted.map(d => [d[1], d[0]])
+      predictedCoords = predicted.map(d => [d[1], d[0]])
+      if (lastInputCoord) {
+        predictedCoords.unshift(lastInputCoord)
+      }
+
       const predictedLine = new maptalks.LineString(predictedCoords, {
-        symbol: {
-          lineColor: '#F3463D', // 붉은색 계열
-          lineWidth: 4,
-          lineDasharray: [10, 6] // 점선 효과
-        }
+        symbol: { lineColor: '#F3463D', lineWidth: 4, lineDasharray: [10, 6] }
       })
       geometries.push(predictedLine)
     }
-    // 그릴 데이터가 아예 없다면 종료
+
     if (geometries.length === 0) return
-    // 3. 기존 레이어를 비우고 과거 실선과 미래 점선 2개를 한 번에 올림
+
+    // 3. 선박 마커 생성 (삼각형)
+    let movingMarker = null
+    if (predictedCoords.length > 1) {
+      movingMarker = new maptalks.Marker(predictedCoords[0], {
+        symbol: {
+          markerType: 'triangle',
+          markerFill: '#F3463D',
+          markerLineColor: '#ffffff',
+          markerLineWidth: 2,
+          // 삼각형이 조금 더 날렵한 화살표처럼 보이도록 비율 조정
+          markerWidth: 14,
+          markerHeight: 20,
+          markerRotation: 0
+        }
+      })
+      geometries.push(movingMarker)
+    }
+
     drawLayer.clear().addGeometry(geometries)
-    // 4. 카메라 시점 이동 (미래 예측의 첫 번째 지점을 중심으로 잡음)
-    const centerCoord = predicted && predicted.length > 0
-      ? [predicted[0][1], predicted[0][0]]
-      : [input[input.length - 1][1], input[input.length - 1][0]]
-    map.animateTo({ center: centerCoord, zoom: 11 }, { duration: 500, easing: 'out' })
+
+    const centerCoord = lastInputCoord || (predictedCoords.length > 0 ? predictedCoords[0] : null)
+    if (centerCoord) {
+      map.animateTo({ center: centerCoord, zoom: 11 }, { duration: 500, easing: 'out' })
+    }
+
+    // 5. 애니메이션 루프
+    if (movingMarker && predictedCoords.length > 1) {
+      let currentIndex = 0
+      let animStartTime = null
+      const durationPerSegment = 800
+
+      function animateShip (timestamp) {
+        if (!animStartTime) animStartTime = timestamp
+        const elapsed = timestamp - animStartTime
+        let progress = elapsed / durationPerSegment
+
+        if (progress >= 1) {
+          progress = 0
+          animStartTime = timestamp
+          currentIndex++
+
+          if (currentIndex >= predictedCoords.length - 1) {
+            currentIndex = 0 // 끝까지 가면 다시 처음부터
+          }
+        }
+
+        const p1 = predictedCoords[currentIndex]
+        const p2 = predictedCoords[currentIndex + 1]
+
+        // 1. 위치 이동
+        const lon = p1[0] + (p2[0] - p1[0]) * progress
+        const lat = p1[1] + (p2[1] - p1[1]) * progress
+        movingMarker.setCoordinates([lon, lat])
+
+        // 2. 화면 픽셀을 이용한 각도(Heading) 계산
+        const sp1 = map.coordinateToContainerPoint(new maptalks.Coordinate(p1[0], p1[1]))
+        const sp2 = map.coordinateToContainerPoint(new maptalks.Coordinate(p2[0], p2[1]))
+
+        const dx = sp2.x - sp1.x
+        const dy = sp2.y - sp1.y
+
+        // 💡 핵심 수정: '+ 90'을 완전히 제거했습니다!
+        // maptalks 삼각형의 기본 방향(오른쪽)에 맞춰 순수 atan2 각도만 적용하면 완벽하게 방향이 맞습니다.
+        const segmentAngle = Math.atan2(dy, dx) * (180 / Math.PI)
+
+        // 계산된 현재 선분의 각도로 뱃머리 업데이트
+        movingMarker.updateSymbol({ markerRotation: segmentAngle })
+
+        animationId = requestAnimationFrame(animateShip)
+      }
+
+      animationId = requestAnimationFrame(animateShip)
+    }
   },
   startDraw: () => {
     drawLayer.clear()
