@@ -10,46 +10,64 @@ const { DB_HOST, DB_USER, DB_PASSWD, DB_DATABASE } = process.env
 const client = new Client({ host: DB_HOST, user: DB_USER, password: DB_PASSWD, database: DB_DATABASE })
 client.connect()
 
+// 💡 [신규] 프론트엔드 테스트를 위한 가상의 카테고리별 선박 데이터
+const mockDatabase = {
+  loitering: [
+    // 💡 flagcountry: 'Korea' 추가!
+    { mmsi: '412000111', shipname: 'UNKNOWN_A', flagcountry: 'Korea', type: 'Fishing', latitude: 36.50, longitude: 125.80, sog: 0.5, posutcmin: 20240310001000, category: 'loitering' }
+  ],
+  transshipment: [
+    { mmsi: '412000222', shipname: 'SUSPECT_B', flagcountry: 'Korea', type: 'Cargo', latitude: 34.20, longitude: 127.50, sog: 0.1, posutcmin: 20240310001000, category: 'transshipment' }
+  ],
+  illegal: [
+    { mmsi: '412000333', shipname: 'SUSPECT_C', flagcountry: 'Korea', type: 'Fishing', latitude: 37.80, longitude: 124.90, sog: 4.5, posutcmin: 20240310001000, category: 'illegal' }
+  ],
+  delayed: [
+    { mmsi: '440555666', shipname: 'SLOW_D', flagcountry: 'Korea', type: 'Tanker', latitude: 34.00, longitude: 128.00, sog: 2.0, posutcmin: 20240310001000, category: 'delayed' }
+  ]
+}
+
 module.exports = function createServicesService () {
   return {
     // ==========================================
     // [01-LVD] 관심지역 의심선박 분류
     // ==========================================
+    // getLvdDataService: async ({ start, end }) => {
+    //   if (!start || !end) return []
+    //   const query = `
+    //     WITH distincted AS (
+    //       WITH joined AS (
+    //         SELECT shipdetails.*, aisdetails.posutcmin, aisdetails.longitude, aisdetails.latitude, aisdetails.cog, aisdetails.navstatuscode
+    //         FROM shipdetails
+    //         INNER JOIN aisdetails ON shipdetails.mmsi=aisdetails.mmsi 
+    //         WHERE flagcountry='Korea'
+    //         AND posutcmin > ${start}
+    //         AND posutcmin < ${end}
+    //         ORDER BY aisdetails.posutcmin DESC
+    //         LIMIT 100000
+    //       )
+    //       SELECT DISTINCT ON (mmsi) * FROM joined
+    //     )
+    //     SELECT distincted.*, fishingfinal.fnf_bool
+    //     FROM distincted
+    //     INNER JOIN fishingfinal ON distincted.mmsi=fishingfinal.mmsi AND distincted.posutcmin=fishingfinal.posutcmin AND fishingfinal.fnf_bool=true;
+    //   `
+    //   const { rows } = await client.query(query)
+    //   const loiteringVessel = Array.from(
+    //     loitering.reduce((m, v) => {
+    //       const existing = m.get(v.mmsi)
+    //       if (!existing || new Date(v.time) > new Date(existing.time)) m.set(v.mmsi, v)
+    //       return m
+    //     }, new Map()).values()
+    //   )
+    //   loiteringVessel.forEach(v => v.suspected_cls = '3')
+    //   return [...rows, ...loiteringVessel]
+    // },
     getLvdDataService: async ({ start, end }) => {
-      if (!start || !end) return []
-
-      const query = `
-        WITH distincted AS (
-          WITH joined AS (
-            SELECT shipdetails.*, aisdetails.posutcmin, aisdetails.longitude, aisdetails.latitude, aisdetails.cog, aisdetails.navstatuscode
-            FROM shipdetails
-            INNER JOIN aisdetails ON shipdetails.mmsi=aisdetails.mmsi 
-            WHERE flagcountry='Korea'
-            AND posutcmin > ${start}
-            AND posutcmin < ${end}
-            ORDER BY aisdetails.posutcmin DESC
-            LIMIT 100000
-          )
-          SELECT DISTINCT ON (mmsi) * FROM joined
-        )
-        SELECT distincted.*, fishingfinal.fnf_bool
-        FROM distincted
-        INNER JOIN fishingfinal ON distincted.mmsi=fishingfinal.mmsi AND distincted.posutcmin=fishingfinal.posutcmin AND fishingfinal.fnf_bool=true;
-      `
-      const { rows } = await client.query(query)
-
-      const loiteringVessel = Array.from(
-        loitering.reduce((m, v) => {
-          const existing = m.get(v.mmsi)
-          if (!existing || new Date(v.time) > new Date(existing.time)) m.set(v.mmsi, v)
-          return m
-        }, new Map()).values()
-      )
-
-      loiteringVessel.forEach(v => v.suspected_cls = '3')
-      return [...rows, ...loiteringVessel]
+      // TODO: 실제 DB 쿼리문 작성 영역
+      // if (!start || !end) return []
+      return mockDatabase.loitering
     },
-
     getLvdHistogramService: async ({ start, end, unit }) => {
       const indexEnd = (() => {
         switch (unit) {
@@ -73,6 +91,14 @@ module.exports = function createServicesService () {
     },
 
     // ==========================================
+    // [02-TVD] 환적 의심선박 분류
+    // ==========================================
+    getTvdDataService: async ({ start, end }) => {
+      // TODO: 실제 DB 쿼리문 작성 영역
+      return mockDatabase.transshipment
+    },
+
+    // ==========================================
     // [03-FAC] 조업/비조업 자동식별
     // ==========================================
     getFacDataService: async ({ start, end }) => {
@@ -89,7 +115,6 @@ module.exports = function createServicesService () {
       const { rows } = await client.query(query)
       return rows
     },
-
     getFacListService: async ({ start, end }) => {
       if (!start || !end) return []
       const query = `
@@ -112,7 +137,6 @@ module.exports = function createServicesService () {
       rows.forEach((r, i) => { r.idx = i })
       return rows
     },
-
     getFacTrajectoryService: async ({ mmsi, start, end }) => {
       if (!mmsi || !start || !end) return []
       const query = `
@@ -126,6 +150,14 @@ module.exports = function createServicesService () {
       `
       const { rows } = await client.query(query)
       return rows
+    },
+
+    // ==========================================
+    // [05-FPI] IUU 어업패턴 감시 (불법어업)
+    // ==========================================
+    getFpiDataService: async ({ start, end }) => {
+      // TODO: 실제 DB 쿼리문 작성 영역
+      return mockDatabase.illegal
     },
 
     // ==========================================
@@ -155,7 +187,7 @@ module.exports = function createServicesService () {
         })
         // AI 서버가 404(데이터 없음)를 반환했을 경우의 부드러운 처리
         if (response.status === 404) {
-          console.warn(`🚨 AI 서버 404 응답: 해당 선박(${payload.mmsi})의 과거 데이터가 없습니다.`)
+          console.warn(`AI 서버 404 응답: 해당 선박(${payload.mmsi})의 과거 데이터가 없습니다.`)
           return {
             status: "fail",
             message: "AI 서버에 해당 선박의 궤적 데이터가 존재하지 않습니다."
@@ -165,9 +197,17 @@ module.exports = function createServicesService () {
         return response.data
       } catch (error) {
         // AI 서버가 아예 꺼져있거나 타임아웃 등 진짜 네트워크 통신 실패일 경우
-        console.error("🚨 AI 서버 연결 실패:", error.message)
+        console.error("AI 서버 연결 실패:", error.message)
         throw error
       }
+    },
+
+    // ==========================================
+    // [08-LAVT] 입항지연 선박 추적
+    // ==========================================
+    getLavtDataService: async ({ start, end }) => {
+      // TODO: 실제 DB 쿼리문 작성 영역
+      return mockDatabase.delayed
     }
   }
 }

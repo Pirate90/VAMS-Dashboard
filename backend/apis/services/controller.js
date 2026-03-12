@@ -11,6 +11,11 @@ module.exports = function createServicesController (service, errHandler) {
       try { res.send(await service.getLvdHistogramService(req.query)) } catch (e) { next(errHandler(500, e)) }
     },
 
+    // --- 02-TVD ---
+    getTvdDataController: async (req, res, next) => {
+      try { res.send(await service.getTvdDataService(req.query)) } catch (e) { next(errHandler(500, e)) }
+    },
+
     // --- 03-FAC ---
     getFacDataController: async (req, res, next) => {
       try { res.send(await service.getFacDataService(req.query)) } catch (e) { next(errHandler(500, e)) }
@@ -20,6 +25,11 @@ module.exports = function createServicesController (service, errHandler) {
     },
     getFacTrajectoryController: async (req, res, next) => {
       try { res.send(await service.getFacTrajectoryService(req.query)) } catch (e) { next(errHandler(500, e)) }
+    },
+
+    // --- 05-FPI ---
+    getFpiDataController: async (req, res, next) => {
+      try { res.send(await service.getFpiDataService(req.query)) } catch (e) { next(errHandler(500, e)) }
     },
 
     // --- 06-SVT ---
@@ -40,6 +50,11 @@ module.exports = function createServicesController (service, errHandler) {
     reqSvtPredictController: async (req, res, next) => {
       try { res.send(await service.reqSvtPredictService(req.body)) } 
       catch (e) { next(errHandler(500, e)) }
+    },
+
+    // --- 08-LAVT ---
+    getLavtDataController: async (req, res, next) => {
+      try { res.send(await service.getLavtDataService(req.query)) } catch (e) { next(errHandler(500, e)) }
     }
   }
 }

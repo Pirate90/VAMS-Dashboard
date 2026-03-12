@@ -163,7 +163,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { vesselApi, vamsApi } from '@/apis'
+import { vesselApi, servicesApi } from '@/apis'
 
 const NAV_STATUS = [
   'Under way using its engine', 'Anchored', 'Not under command', 'Has restricted maneuverability',
@@ -262,7 +262,7 @@ async function requestSvt () {
     console.log(`🤖 AI 궤적 예측 요청 | 시작(과거): ${payload.start_posutcmin}, 종료(현재): ${payload.end_posutcmin}`)
 
     // API 호출
-    const response = await vamsApi['06-svt'].predict(payload)
+    const response = await servicesApi['06-svt'].predict(payload)
     // 성공/실패 분기 처리
     if (response && response.status === 'success') {
       // 💡 신규: input_trajectory와 predicted_trajectory 두 개를 객체로 묶어서 부모(MainMap)로 전달
@@ -289,7 +289,7 @@ async function requestLgvd () {
   currentReportTitle.value = `[${props.vessel.shipname}] VLM 선박활동 설명서`
   // TODO: 실제 09-LGVD API 호출 (현재는 10-LVAD 모의 데이터를 빌려옴)
   setTimeout(async () => {
-    const data = await vamsApi['10-lvad'].getExplanation()
+    const data = await servicesApi['10-lvad'].getExplanation()
     reportData.value = data
     loadingLgvd.value = false
     showReportModal.value = true
@@ -302,7 +302,7 @@ async function requestLvad () {
   currentReportTitle.value = `[${props.vessel.shipname}] LLM 불법어업 근거 분석`
 
   try {
-    const data = await vamsApi['10-lvad'].getExplanation()
+    const data = await servicesApi['10-lvad'].getExplanation()
     reportData.value = data
     showReportModal.value = true
   } catch (error) {

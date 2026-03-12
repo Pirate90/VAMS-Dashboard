@@ -15,6 +15,6 @@ export async function getTrenchmap (type) {
 
 // API 인스턴스 생성 및 Export
 export const vesselApi = createVesselApi(axios)
-export const vamsApi = createVamsServicesApi(axios)
+export const servicesApi = createVamsServicesApi(axios)
 export const workflowApi = createWorkflowApi(axios)
 export const districtmapApi = createDistrictmapApi(axios)

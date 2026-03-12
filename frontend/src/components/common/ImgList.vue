@@ -18,7 +18,7 @@
 
 <script setup>
 import { defineProps, onMounted, ref, defineEmits } from 'vue'
-import { vamsApi } from '@/apis'
+import { servicesApi } from '@/apis'
 
 const props = defineProps({
   show: {
@@ -34,7 +34,7 @@ const currentImg = ref('')
 const currentType = ref('')
 
 onMounted(async () => {
-  imgList.value = await vamsApi['06-svt'].getList()
+  imgList.value = await servicesApi['06-svt'].getList()
 })
 
 function onClickImg (i, type) {

@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import { ref, defineEmits, watch, defineExpose } from 'vue'
+import { ref, defineEmits, defineExpose } from 'vue'
 import RequestPopup from '@/components/common/RequestPopup.vue'
 
 // 💡 'close:popups' 이벤트를 추가로 정의합니다.
@@ -96,17 +96,18 @@ function onClickSection (s) {
   showPorts.value = false
 }
 
-const checkedFilter = ref(['doubt', 'illegal'])
+const checkedFilter = ref(['normal', 'loitering', 'transshipment', 'illegal', 'delayed'])
 const filterList = [
   { name: '정상선박', value: 'normal' },
-  { name: '의심선박', value: 'doubt' },
-  { name: '불법선박', value: 'illegal' },
-  { name: '배회선박', value: 'loitering' }
+  { name: '배회의심', value: 'loitering' },
+  { name: '환적의심', value: 'transshipment' },
+  { name: '불법어업', value: 'illegal' },
+  { name: '입항지연', value: 'delayed' }
 ]
 
-watch(checkedFilter, (f) => {
-  emit('filter:change', f)
-})
+function onChangeFilter () {
+  emit('filter:change', [...checkedFilter.value])
+}
 
 const currentTrenchmap = ref('big')
 const trenchmapList = [

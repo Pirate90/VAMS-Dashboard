@@ -24,6 +24,7 @@
         @data:load="isLoading = false"
         @draw:completed="onDrawCompleted"
         @popup:open="onMainMapPopupOpened"
+        @stats:open="handleStatsOpen"
       ></MainMap>
       <VesselInformation ref="vesselInfo" v-if="show"
         :vessel="currentVessel"
@@ -35,6 +36,12 @@
         @info:predict="onShowPredictedTrajectory"
       ></VesselInformation>
       <DatetimeSelector @change:datetime="onChangeDatetime"></DatetimeSelector>
+      <ReportGenerator
+        v-if="showReportGenerator"
+        :initial-data="reportInitialData"
+        @close="showReportGenerator = false"
+        @generate="handleGenerateReport"
+      />
     </div>
     <div class="result-popup" v-if="displayResult">
       <button @click="displayResult = false"><f-a-icon icon="x" /></button>
@@ -52,6 +59,7 @@ import ImgList from '@/components/common/ImgList'
 import VesselInformation from '@/components/common/VesselInformation'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import DistrictmapConfig from '@/components/common/DistrictmapConfig'
+import ReportGenerator from '@/components/common/ReportGenerator'
 
 const map = ref()
 const vesselInfo = ref()
@@ -65,7 +73,8 @@ const currentResult = ref('')
 const currentVessel = ref({})
 const show = ref(false)
 const selectedCoords = ref(null)
-
+const showReportGenerator = ref(false)
+const reportInitialData = ref(null)
 const currentDashboardTime = ref('') // 대시보드 타임라인의 현재 시간 저장용
 
 // 타임 슬라이더에서 'change:datetime' 이벤트가 올라왔을 때 실행되는 함수
@@ -166,6 +175,20 @@ function onMainMapPopupOpened () {
   showDistrictmapConfig.value = false
   showImgList.value = false
   toolbar.value?.closePopups() // 지도 사이드 팝업 열릴 때 툴바 팝업 닫기
+}
+// MainMap에서 우클릭 통계 버튼을 눌렀을 때 실행되는 함수
+function handleStatsOpen (data) {
+  reportInitialData.value = data // 지도에서 넘겨준 기간(일/주/월)과 구역 데이터 저장
+  showReportGenerator.value = true // 팝업 띄우기
+}
+
+// 팝업에서 '보고서 생성' 버튼을 눌렀을 때 실행되는 함수
+function handleGenerateReport (formData) {
+  console.log('최종 보고서 생성 데이터:', formData)
+  showReportGenerator.value = false // 팝업 닫기
+
+  // TODO: 여기서 formData를 가지고 실제 백엔드 API를 호출하여 PDF 생성/다운로드 등의 로직을 연결하시면 됩니다.
+  alert('보고서 생성을 요청했습니다. (콘솔 로그 확인)')
 }
 </script>
 

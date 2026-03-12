@@ -1,19 +1,25 @@
 // src/apis/services.js
 export default function createVamsServicesApi (http) {
   return {
-    // 1. LVD: 관심지역 의심선박 분류
+    // 1. LVD: 관심지역 의심선박 분류 (배회의심)
     '01-lvd': {
+      getLvdData: async (start, end) => {
+        const { data } = await http.get('/services/01-lvd/data', { params: { start, end } })
+        return data
+      },
       getHistogram: async (start, end, unit) => {
         const { data } = await http.get('/services/01-lvd/histogram', { params: { start, end, unit } })
         return data
-      },
-      getLoiteringVessel: async () => {
-        const { data } = await http.get('/services/01-lvd/loitering')
+      }
+    },
+
+    // 2. TVD: 환적 의심선박 분류
+    '02-tvd': {
+      getTvdData: async (start, end) => {
+        const { data } = await http.get('/services/02-tvd/data', { params: { start, end } })
         return data
       }
     },
-    // 2. TVD: 환적 의심선박 분류
-    '02-tvd': {},
 
     // 3. FAC: 조업/비조업 자동식별
     '03-fac': {},
@@ -22,7 +28,12 @@ export default function createVamsServicesApi (http) {
     '04-fgvd': {},
 
     // 5. FPI: IUU 어업패턴 감시
-    '05-fpi': {},
+    '05-fpi': {
+      getFpiData: async (start, end) => {
+        const { data } = await http.get('/services/05-fpi/data', { params: { start, end } })
+        return data
+      }
+    },
 
     // 6. SVT: 의심선박 시공간 추적 (기존 tracing)
     '06-svt': {
@@ -41,7 +52,12 @@ export default function createVamsServicesApi (http) {
     '07-mvt': {},
 
     // 8. LAVT: 입항지연 선박 추적
-    '08-lavt': {},
+    '08-lavt': {
+      getLavtData: async (start, end) => {
+        const { data } = await http.get('/services/08-lavt/data', { params: { start, end } })
+        return data
+      }
+    },
 
     // 9. LGVD: VLM 기반 선박활동 설명
     '09-lgvd': {},
