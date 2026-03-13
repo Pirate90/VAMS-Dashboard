@@ -34,6 +34,7 @@
         @info:normalize="map.normalize"
         @info:trajectory="showTrajectory"
         @info:predict="onShowPredictedTrajectory"
+        @info:blink="handleBlinkVessel"
       ></VesselInformation>
       <DatetimeSelector @change:datetime="onChangeDatetime"></DatetimeSelector>
       <ReportGenerator
@@ -84,42 +85,33 @@ function onChangeDatetime (start, end, today, tomorrow) {
   isLoading.value = true
   map.value?.changeDatetime(start, end, today, tomorrow)
 }
-
 // 1. 팝업에서 "구역 설정" 클릭 시 호출
 function handleStartDraw () {
   map.value.startDraw()
 }
-
 // 2. 지도에서 그리기 완료 시 호출되어 팝업으로 좌표 전달
 function onDrawCompleted (coords) {
   selectedCoords.value = coords
   alert('구역 설정이 완료되었습니다.')
 }
-
 function onChangeSection (s) {
   map.value.changeCenter(s)
 }
-
 function onChangeTrenchmap (t) {
   map.value.changeTrenchmap(t)
 }
-
 function onChangeFilter (f) {
   map.value.changeFilter(f)
 }
-
 function onChangeDistrictmapConfig (e) {
   map.value.changeDistrictmapConfig(e)
 }
-
 function onSelectall () {
   map.value.onSelectAllDistrict()
 }
-
 function onUnselectall () {
   map.value.onUnselectAllDistrict()
 }
-
 function displayImg (info, type) {
   if (type === 'result') {
     currentResult.value = info.name
@@ -128,27 +120,22 @@ function displayImg (info, type) {
     map.value.displayImg(info, type)
   }
 }
-
 function showVesselInfo (e) {
   currentVessel.value = e
   map.value.hideTrajectory()
   show.value = true
 }
-
 function closeVesselInfo (id) {
   show.value = false
   map.value.normalize(id)
 }
-
 function showTrajectory (mmsi) {
   isLoading.value = true
   map.value.showTrajectory(mmsi)
 }
-
 function onShowPredictedTrajectory (predictData) {
   map.value.showPredictedTrajectory(predictData)
 }
-
 function onToggleDistrictmap () {
   showDistrictmapConfig.value = !showDistrictmapConfig.value
   if (showDistrictmapConfig.value) {
@@ -156,7 +143,6 @@ function onToggleDistrictmap () {
     map.value?.closePopups() // 지도 사이드 팝업 닫기
   }
 }
-
 function onToggleImgList () {
   showImgList.value = !showImgList.value
   if (showImgList.value) {
@@ -164,17 +150,19 @@ function onToggleImgList () {
     map.value?.closePopups() // 지도 사이드 팝업 닫기
   }
 }
-
 function onChangeCountry (c) {
   map.value.changeCountry(c)
 }
-
 function onToolbarPopupsOpened () {
   showDistrictmapConfig.value = false
   showImgList.value = false
   map.value?.closePopups() // 툴바 하위 메뉴 열릴 때 지도 사이드 팝업 닫기
 }
-
+function handleBlinkVessel (vesselData) {
+  if (map.value) {
+    map.value.startBlinkVessel(vesselData)
+  }
+}
 function onMainMapPopupOpened () {
   showDistrictmapConfig.value = false
   showImgList.value = false
@@ -185,7 +173,6 @@ function handleStatsOpen (data) {
   reportInitialData.value = data // 지도에서 넘겨준 기간(일/주/월)과 구역 데이터 저장
   showReportGenerator.value = true // 팝업 띄우기
 }
-
 // 팝업에서 '보고서 생성' 버튼을 눌렀을 때 실행되는 함수
 function handleGenerateReport (formData) {
   console.log('최종 보고서 생성 데이터:', formData)

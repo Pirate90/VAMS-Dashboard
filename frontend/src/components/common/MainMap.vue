@@ -15,6 +15,19 @@
       <img src="@/assets/search-white.png" alt="search" class="tool-icon" />
       <span class="hover-text">선박 조회</span>
     </button>
+    <button class="side-toggle-btn btn-alarm" :class="{ active: showAlarmPanel }" @click="toggleAlarmPanel">
+      <f-a-icon icon="bell" class="tool-icon" style="color: #fff; font-size: 20px;" />
+      <span class="hover-text">이상 탐지 알림</span>
+      <span class="alarm-badge" v-if="unreadAlarmCount > 0">
+        {{ unreadAlarmCount > 99 ? '99+' : unreadAlarmCount }}
+      </span>
+    </button>
+    <EventAlarmPanel
+      :show="showAlarmPanel"
+      @close="showAlarmPanel = false"
+      @focus-ship="handleFocusShipFromAlarm"
+      @update-unread="updateUnreadCount"
+    />
     <div class="popup-wrapper wrapper-list" v-if="showVesselList">
       <VesselList :show="showVesselList" :list="vesselList"
         @list:close="closeVesselList"
@@ -40,6 +53,7 @@ import Img from '@/util/maptalks/img'
 import VesselList from '@/components/common/VesselList'
 import VesselSearch from '@/components/common/VesselSearch'
 import MapContextMenu from '@/components/common/MapContextMenu'
+import EventAlarmPanel from '@/components/common/EventAlarmPanel.vue'
 import * as maptalks from 'maptalks'
 import { vesselApi, servicesApi } from '@/apis'
 
@@ -55,20 +69,23 @@ let drawTool = null
 let drawLayer = null
 let animationId = null
 
-// 💡 날짜 및 캐싱 관련 상태 변수
 let startDate = null
 let endDate = null
 let currentStart = null
 let currentEnd = null
 let allVesselData = []
 
-// 💡 필터 상태를 저장하는 변수
 let activeFilters = ['normal', 'loitering', 'transshipment', 'illegal', 'delayed']
 let activeCountries = ['Korea']
 
 const vesselList = ref([])
 const showVesselList = ref(false)
 const showVesselSearch = ref(false)
+const showAlarmPanel = ref(false)
+const unreadAlarmCount = ref(0)
+
+let vesselBlinkInterval = null
+
 const contextMenu = ref({
   show: false,
   x: 0,
@@ -132,11 +149,9 @@ const onStatsClick = (data) => {
   emit('stats:open', data)
 }
 
-// 💡 화면 밖 선박 렌더링 최적화
 const updateVisibleVessels = () => {
   if (!map || !vessel) return
 
-  // 데이터가 아예 없을 때(모든 필터 해제 시) 지도를 깨끗하게 비우도록 처리
   if (allVesselData.length === 0) {
     vessel.changeDateTime([])
     return
@@ -185,24 +200,18 @@ const fetchVesselsByCategory = async (category, start, end) => {
   }
 }
 
-// 💡 핵심: 필터링 로직을 깔끔하게 분리하고 강화했습니다.
 const filterByCountry = (targetData) => {
   return targetData.filter(item => {
     const name = String(item.shipname || item.ship_name || item.name || '')
     const flag = String(item.flagcountry || item.flag_country || '')
 
-    // 이름이나 국적이 없으면 버림
     if (name.trim() === '' || flag.trim() === '') return false
-
-    // 국가 배열이 비어있으면(모두 체크 해제) 전부 숨김
     if (!activeCountries || activeCountries.length === 0) return false
 
-    // 국가 매칭 로직
     if (activeCountries.includes('Korea') && flag.includes('Korea')) return true
     if (activeCountries.includes('China') && flag.includes('China')) return true
     if (activeCountries.includes('Japan') && flag.includes('Japan')) return true
 
-    // '이외(Others)'가 체크되어 있고, 한/중/일이 아니면 통과
     if (activeCountries.includes('Others') && !flag.includes('Korea') && !flag.includes('China') && !flag.includes('Japan')) {
       return true
     }
@@ -281,6 +290,11 @@ onMounted(async () => {
   map.on('contextmenu', (e) => {
     if (e.domEvent) e.domEvent.preventDefault()
     clearBlink()
+
+    // 💡 1. 지도 위에서 마우스 우클릭 시 우측 패널(알림창, 목록창 등)을 모두 닫기!
+    showVesselList.value = false
+    showVesselSearch.value = false
+    showAlarmPanel.value = false
 
     contextMenu.value.x = e.containerPoint.x
     contextMenu.value.y = e.containerPoint.y
@@ -387,6 +401,7 @@ function toggleVesselList () {
   showVesselList.value = !showVesselList.value
   if (showVesselList.value) {
     showVesselSearch.value = false
+    showAlarmPanel.value = false // 💡 다른 버튼 열 때 닫기
     emit('popup:open')
   }
 }
@@ -395,7 +410,33 @@ function toggleVesselSearch () {
   showVesselSearch.value = !showVesselSearch.value
   if (showVesselSearch.value) {
     showVesselList.value = false
+    showAlarmPanel.value = false // 💡 다른 버튼 열 때 닫기
     emit('popup:open')
+  }
+}
+
+function toggleAlarmPanel () {
+  showAlarmPanel.value = !showAlarmPanel.value
+  if (showAlarmPanel.value) {
+    showVesselList.value = false
+    showVesselSearch.value = false
+    emit('popup:open')
+  }
+}
+
+function updateUnreadCount (count) {
+  unreadAlarmCount.value = count
+}
+
+function handleFocusShipFromAlarm (eventData) {
+  if (eventData.lon && eventData.lat) {
+    map.animateTo({
+      zoom: 12,
+      center: [eventData.lon, eventData.lat]
+    }, {
+      duration: 800,
+      easing: 'out'
+    })
   }
 }
 
@@ -416,13 +457,11 @@ defineExpose({
       easing: 'out'
     })
   },
-
   changeDatetime: async (start, end, today, tomorrow) => {
     startDate = today
     endDate = tomorrow
     currentStart = start
     currentEnd = end
-
     cachedVessels = {
       normal: null,
       loitering: null,
@@ -430,11 +469,9 @@ defineExpose({
       illegal: null,
       delayed: null
     }
-
     await loadFilteredData()
     emit('data:load')
   },
-
   showList: () => {
     showVesselList.value = true
   },
@@ -453,24 +490,59 @@ defineExpose({
   displayImg: (info, type) => {
     img.draw(info, type)
   },
-
   changeFilter: async (filters) => {
     activeFilters = filters
     await loadFilteredData()
   },
-
-  // 💡 국가 필터 변경 이벤트 수신
   changeCountry: async (countries) => {
     activeCountries = countries
     await loadFilteredData()
   },
-
   highlight: (id) => {
     vessel.highlight(id)
+  },
+  startBlinkVessel: (vesselData) => {
+    if (vesselBlinkInterval) clearInterval(vesselBlinkInterval)
+
+    let alertLayer = map.getLayer('alert-layer')
+    if (!alertLayer) {
+      alertLayer = new maptalks.VectorLayer('alert-layer').addTo(map)
+    }
+    alertLayer.clear()
+
+    const marker = new maptalks.Marker([vesselData.longitude, vesselData.latitude], {
+      symbol: {
+        markerType: 'ellipse',
+        markerFill: '#E53935',
+        markerFillOpacity: 0.6,
+        markerLineColor: '#E53935',
+        markerLineWidth: 2,
+        markerWidth: 30,
+        markerHeight: 30
+      }
+    }).addTo(alertLayer)
+
+    let isBig = false
+    vesselBlinkInterval = setInterval(() => {
+      marker.updateSymbol({
+        markerWidth: isBig ? 30 : 50,
+        markerHeight: isBig ? 30 : 50,
+        markerFillOpacity: isBig ? 0.6 : 0.2
+      })
+      isBig = !isBig
+    }, 400)
   },
   normalize: (id) => {
     vessel.normalize(id)
     trajectory.hide()
+
+    if (vesselBlinkInterval) {
+      clearInterval(vesselBlinkInterval)
+      vesselBlinkInterval = null
+    }
+    const alertLayer = map.getLayer('alert-layer')
+    if (alertLayer) alertLayer.clear()
+
     if (animationId) {
       cancelAnimationFrame(animationId)
       animationId = null
@@ -498,11 +570,9 @@ defineExpose({
       cancelAnimationFrame(animationId)
       animationId = null
     }
-
     const { input, predicted } = predictData
     const geometries = []
     let lastInputCoord = null
-
     if (input && input.length > 0) {
       const inputCoords = input.map(d => [d[1], d[0]])
       lastInputCoord = inputCoords[inputCoords.length - 1]
@@ -511,7 +581,6 @@ defineExpose({
       })
       geometries.push(inputLine)
     }
-
     let predictedCoords = []
     if (predicted && predicted.length > 0) {
       predictedCoords = predicted.map(d => [d[1], d[0]])
@@ -523,9 +592,7 @@ defineExpose({
       })
       geometries.push(predictedLine)
     }
-
     if (geometries.length === 0) return
-
     let movingMarker = null
     if (predictedCoords.length > 1) {
       movingMarker = new maptalks.Marker(predictedCoords[0], {
@@ -541,24 +608,19 @@ defineExpose({
       })
       geometries.push(movingMarker)
     }
-
     drawLayer.clear().addGeometry(geometries)
-
     const centerCoord = lastInputCoord || (predictedCoords.length > 0 ? predictedCoords[0] : null)
     if (centerCoord) {
       map.animateTo({ center: centerCoord, zoom: 11 }, { duration: 500, easing: 'out' })
     }
-
     if (movingMarker && predictedCoords.length > 1) {
       let currentIndex = 0
       let animStartTime = null
       const durationPerSegment = 800
-
       function animateShip (timestamp) {
         if (!animStartTime) animStartTime = timestamp
         const elapsed = timestamp - animStartTime
         let progress = elapsed / durationPerSegment
-
         if (progress >= 1) {
           progress = 0
           animStartTime = timestamp
@@ -567,23 +629,19 @@ defineExpose({
             currentIndex = 0
           }
         }
-
         const p1 = predictedCoords[currentIndex]
         const p2 = predictedCoords[currentIndex + 1]
         const lon = p1[0] + (p2[0] - p1[0]) * progress
         const lat = p1[1] + (p2[1] - p1[1]) * progress
         movingMarker.setCoordinates([lon, lat])
-
         const sp1 = map.coordinateToContainerPoint(new maptalks.Coordinate(p1[0], p1[1]))
         const sp2 = map.coordinateToContainerPoint(new maptalks.Coordinate(p2[0], p2[1]))
         const dx = sp2.x - sp1.x
         const dy = sp2.y - sp1.y
         const segmentAngle = Math.atan2(dy, dx) * (90 / Math.PI)
-
         movingMarker.updateSymbol({ markerRotation: segmentAngle })
         animationId = requestAnimationFrame(animateShip)
       }
-
       animationId = requestAnimationFrame(animateShip)
     }
   },
@@ -594,9 +652,12 @@ defineExpose({
   stopDraw: () => {
     drawTool.disable()
   },
+
+  // 💡 2. 툴바의 다른 버튼(구역도, 해구도 등)을 누를 때 모든 사이드 패널 닫기!
   closePopups: () => {
     showVesselList.value = false
     showVesselSearch.value = false
+    showAlarmPanel.value = false
   }
 })
 </script>
@@ -637,6 +698,26 @@ defineExpose({
 }
 .btn-list { top: 60px; }
 .btn-search { top: 115px; }
+.btn-alarm { top: 170px; }
+.alarm-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: #EF4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid #222222;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  pointer-events: none;
+}
 .tool-icon {
   width: 22px !important;
   height: 22px !important;

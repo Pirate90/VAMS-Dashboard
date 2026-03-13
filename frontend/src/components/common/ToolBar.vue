@@ -58,10 +58,12 @@
         </div>
       </div>
       <div class="divider"></div>
+
       <div class="districtmap-config d-flex">
         <button style="min-width: 130px;" @click="toggleMenu('none'); emit('imglist:toggle')">위성영상 리스트</button>
       </div>
       <div class="divider"></div>
+
       <div class="section-list d-flex">
         <button style="min-width: 130px;" @click="toggleMenu('request')" :class="[displayRequest ? 'req-activate' : '']">워크플로우 등록</button>
       </div>
@@ -110,7 +112,6 @@ function onClickSection (s) {
   showPorts.value = false
 }
 
-// 💡 [핵심] 기본값을 'Korea' 하나만 남겼습니다!
 const checkedCountry = ref(['Korea'])
 const countryList = [
   { name: '한국', value: 'Korea' },
@@ -161,12 +162,11 @@ defineExpose({
 </script>
 
 <style scoped>
-/* 💡 1. 툴바 전체 높이를 키우고 바닥에 은은한 선을 추가했습니다 */
 section {
   position: absolute;
   width: 100%;
-  height: 54px; /* 기존 40px -> 54px 로 넓게 */
-  background: #1e1e1e; /* 대시보드 톤에 맞춘 색상 */
+  height: 54px;
+  background: #1e1e1e;
   border-bottom: 1px solid #333;
   z-index: 2000;
   top: 0;
@@ -176,27 +176,33 @@ section {
   justify-content: space-between;
 }
 .tools { gap: 20px; align-items: center; }
-.divider { width: 1.5px; height: 18px; background-color: #444; } /* 구분선 세련되게 변경 */
+.divider { width: 1.5px; height: 18px; background-color: #444; }
 
 .dropdown-wrapper { position: relative; align-items: center; }
 
-/* 💡 2. 모든 버튼의 높이와 여백을 대폭 늘려 클릭하기 편하게 만들었습니다 */
+/* 💡 1. 텍스트 정렬을 완벽하게 잡기 위해 display: flex 속성 적용 */
+/* 💡 2. 가시성 상향을 위해 font-weight: 600(Semi-bold) 적용 및 색상을 #EFEFEF 로 밝게 변경 */
 .toggle-btn, .section-list > button, .districtmap-config > button {
-  height: 34px; /* 기존 25px -> 34px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
   min-width: 90px;
   padding: 0 16px;
   border: 1px solid #555;
-  border-radius: 17px; /* 알약 형태의 둥근 모서리 */
+  border-radius: 17px;
   background: #2A2A2A;
-  font: normal normal 500 14px/34px SUIT;
+  font-family: 'SUIT', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1; /* line-height 의존성 제거 */
   letter-spacing: -0.5px;
-  color: #bbb;
+  color: #EFEFEF;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
-/* 호버 및 활성화 상태일 때 브랜드 컬러(#646BA1) 적용 */
 .toggle-btn:hover, .toggle-btn.active,
 .section-list > button:hover, .districtmap-config > button:hover, .req-activate {
   background: #646BA1;
@@ -211,10 +217,9 @@ section {
   cursor: auto !important;
 }
 
-/* 💡 3. 드롭다운 팝업 위치 및 내부 간격 조정 */
 .dropdown-content {
   position: absolute;
-  top: 46px; /* 버튼이 커졌으므로 위치 하향 조정 */
+  top: 46px;
   left: 0;
   background: #2A2A2A;
   padding: 12px;
@@ -226,21 +231,28 @@ section {
   gap: 8px;
 }
 
-/* 💡 4. 체크박스 라벨도 버튼과 완벽하게 동일한 모양으로 통일 */
+/* 💡 체크박스 라벨도 일반 버튼과 동일하게 Flexbox 정렬 및 가시성 상향 */
 .check-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 34px;
   min-width: 90px;
   padding: 0 16px;
   border: 1px solid #555;
   border-radius: 17px;
   background: #2A2A2A;
-  font: normal normal 500 14px/34px SUIT;
-  color: #bbb;
+  font-family: 'SUIT', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  color: #EFEFEF;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.check-label:hover { background: #444; color: #fff; }
+.check-label:hover { background: #444; color: #ffffff; }
 
 .check-label::before {
   display: inline-block;
@@ -251,10 +263,9 @@ section {
   width: 13px;
   height: 9px;
   transition: transform .3s ease-in-out;
-  margin-right: 6px; /* 텍스트와의 간격 조정 */
+  margin-right: 6px;
 }
 
-/* 체크되었을 때 브랜드 컬러 적용 */
 input[type="checkbox"]:checked+.check-label::before {
   transform: rotate(-360deg);
 }
@@ -262,12 +273,12 @@ input[type="checkbox"]:checked+.check-label::before {
 input[type="checkbox"]:checked+.check-label {
   background-color: #646BA1;
   border-color: #646BA1;
-  color: #fff;
+  color: #ffffff;
 }
 
 input[type="checkbox"] { position: absolute; opacity: 0; }
 
-/* 💡 5. 우측 끝 빠른 서비스 창 버튼도 동일 규격으로 맞춤 */
+/* 💡 우측 빠른 서비스 창 버튼도 동일하게 교정 */
 .direct-service {
   position: relative;
   display: flex;
@@ -279,8 +290,12 @@ input[type="checkbox"] { position: absolute; opacity: 0; }
   border-radius: 17px;
   background-color: #2A2A2A;
   padding: 0 30px 0 16px;
-  color: #bbb;
-  font: normal normal 500 14px/34px SUIT;
+  font-family: 'SUIT', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  color: #EFEFEF;
   transition: all .2s ease;
   cursor: pointer;
 }
@@ -295,5 +310,5 @@ input[type="checkbox"] { position: absolute; opacity: 0; }
   height: 6px;
   opacity: 0.7;
 }
-.direct-service:hover { background-color: #444; color: #fff; }
+.direct-service:hover { background-color: #444; color: #ffffff; }
 </style>
