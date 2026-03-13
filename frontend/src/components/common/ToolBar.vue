@@ -5,6 +5,7 @@
         <button @click="toggleMenu('none'); emit('districtmapconfig:toggle')">구역도 설정</button>
       </div>
       <div class="divider"></div>
+
       <div class="dropdown-wrapper d-flex">
         <button class="toggle-btn" @click="toggleMenu('trenchmaps')" :class="{ 'active': showTrenchmaps }">
           해구도
@@ -19,6 +20,7 @@
         </div>
       </div>
       <div class="divider"></div>
+
       <div class="dropdown-wrapper d-flex">
         <button class="toggle-btn" @click="toggleMenu('ports')" :class="{ 'active': showPorts }">
           주요 항구
@@ -30,24 +32,38 @@
         </div>
       </div>
       <div class="divider"></div>
+
       <div class="dropdown-wrapper d-flex">
-        <button class="toggle-btn" style="width: 110px;" @click="toggleMenu('filters')" :class="{ 'active': showFilters }">
+        <button class="toggle-btn" @click="toggleMenu('countries')" :class="{ 'active': showCountries }">
+          선박 국가
+        </button>
+        <div class="dropdown-content filter-list d-flex" v-if="showCountries">
+          <div v-for="c in countryList" :key="c.name">
+            <input type="checkbox" :id="'country-' + c.name" v-model="checkedCountry" :value="c.value" @change="onChangeCountry">
+            <label class="check-label d-flex j-c-center a-i-center" :for="'country-' + c.name">{{ c.name }}</label>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+
+      <div class="dropdown-wrapper d-flex">
+        <button class="toggle-btn" style="min-width: 120px;" @click="toggleMenu('filters')" :class="{ 'active': showFilters }">
           선박 활동 타입
         </button>
         <div class="dropdown-content filter-list d-flex" v-if="showFilters">
           <div v-for="f in filterList" :key="f.name">
-            <input type="checkbox" :id="f.name" v-model="checkedFilter" :value="f.value" @change="onChangeFilter">
-            <label class="d-flex j-c-center a-i-center" :for="f.name">{{ f.name }}</label>
+            <input type="checkbox" :id="'filter-' + f.name" v-model="checkedFilter" :value="f.value" @change="onChangeFilter">
+            <label class="check-label d-flex j-c-center a-i-center" :for="'filter-' + f.name">{{ f.name }}</label>
           </div>
         </div>
       </div>
       <div class="divider"></div>
       <div class="districtmap-config d-flex">
-        <button @click="toggleMenu('none'); emit('imglist:toggle')">위성영상 리스트</button>
+        <button style="min-width: 130px;" @click="toggleMenu('none'); emit('imglist:toggle')">위성영상 리스트</button>
       </div>
       <div class="divider"></div>
       <div class="section-list d-flex">
-        <button style="width: 120px;" @click="toggleMenu('request')" :class="[displayRequest ? 'req-activate' : '']">워크플로우 등록</button>
+        <button style="min-width: 130px;" @click="toggleMenu('request')" :class="[displayRequest ? 'req-activate' : '']">워크플로우 등록</button>
       </div>
     </div>
 
@@ -60,25 +76,23 @@
 import { ref, defineEmits, defineExpose } from 'vue'
 import RequestPopup from '@/components/common/RequestPopup.vue'
 
-// 💡 'close:popups' 이벤트를 추가로 정의합니다.
-const emit = defineEmits(['section:change', 'trenchmap:change', 'filter:change', 'districtmapconfig:toggle', 'imglist:toggle', 'toolbar:draw', 'close:popups'])
+const emit = defineEmits(['section:change', 'trenchmap:change', 'filter:change', 'country:change', 'districtmapconfig:toggle', 'imglist:toggle', 'toolbar:draw', 'close:popups'])
 const props = defineProps(['selectedCoords'])
 
 const showPorts = ref(false)
 const showFilters = ref(false)
+const showCountries = ref(false)
 const showTrenchmaps = ref(false)
 const displayRequest = ref(false)
 
-// 💡 통합 토글 제어 함수 업데이트
 function toggleMenu (menu) {
-  // 1. 내부 드롭다운 상태 관리 (선택한 것만 열고 나머지는 무조건 닫음)
   showTrenchmaps.value = menu === 'trenchmaps' ? !showTrenchmaps.value : false
   showPorts.value = menu === 'ports' ? !showPorts.value : false
   showFilters.value = menu === 'filters' ? !showFilters.value : false
+  showCountries.value = menu === 'countries' ? !showCountries.value : false
   displayRequest.value = menu === 'request' ? !displayRequest.value : false
 
-  // 2. 내부 메뉴(해구도, 항구 등)를 열었을 때, 외부에 띄워진 구역도/위성 창도 닫도록 부모에게 신호 전송
-  if (['trenchmaps', 'ports', 'filters', 'request'].includes(menu)) {
+  if (['trenchmaps', 'ports', 'filters', 'countries', 'request'].includes(menu)) {
     emit('close:popups')
   }
 }
@@ -94,6 +108,19 @@ function onClickSection (s) {
   currentSection.value = s
   emit('section:change', s)
   showPorts.value = false
+}
+
+// 💡 [핵심] 기본값을 'Korea' 하나만 남겼습니다!
+const checkedCountry = ref(['Korea'])
+const countryList = [
+  { name: '한국', value: 'Korea' },
+  { name: '중국', value: 'China' },
+  { name: '일본', value: 'Japan' },
+  { name: '이외', value: 'Others' }
+]
+
+function onChangeCountry () {
+  emit('country:change', [...checkedCountry.value])
 }
 
 const checkedFilter = ref(['normal', 'loitering', 'transshipment', 'illegal', 'delayed'])
@@ -127,105 +154,95 @@ defineExpose({
     showTrenchmaps.value = false
     showPorts.value = false
     showFilters.value = false
+    showCountries.value = false
     displayRequest.value = false
   }
 })
 </script>
 
 <style scoped>
+/* 💡 1. 툴바 전체 높이를 키우고 바닥에 은은한 선을 추가했습니다 */
 section {
   position: absolute;
   width: 100%;
-  height: 40px;
-  background: #222222;
-  z-index: 2000; /* 💡 999에서 2000으로 수정 */
+  height: 54px; /* 기존 40px -> 54px 로 넓게 */
+  background: #1e1e1e; /* 대시보드 톤에 맞춘 색상 */
+  border-bottom: 1px solid #333;
+  z-index: 2000;
   top: 0;
   right: 0;
   padding: 0 30px;
   align-items: center;
   justify-content: space-between;
 }
-.tools {
-  gap: 20px;
-}
-.divider {
-  width: 1.5px;
-  background-color: rgba(255, 255, 255, 0.4);
-}
+.tools { gap: 20px; align-items: center; }
+.divider { width: 1.5px; height: 18px; background-color: #444; } /* 구분선 세련되게 변경 */
 
-/* 드롭다운 래퍼 및 콘텐츠 스타일 */
-.dropdown-wrapper {
-  position: relative;
-  align-items: center;
-}
-.toggle-btn {
-  height: 25px;
-  width: 90px;
-  border: 1px solid #656565;
-  border-radius: 13px;
-  background: #222222;
-  font: normal normal 600 14px/20px SUIT;
-  letter-spacing: -0.75px;
-  color: #828282;
-  transition: all .2s;
-}
-.toggle-btn:hover,
-.toggle-btn.active {
+.dropdown-wrapper { position: relative; align-items: center; }
+
+/* 💡 2. 모든 버튼의 높이와 여백을 대폭 늘려 클릭하기 편하게 만들었습니다 */
+.toggle-btn, .section-list > button, .districtmap-config > button {
+  height: 34px; /* 기존 25px -> 34px */
+  min-width: 90px;
+  padding: 0 16px;
+  border: 1px solid #555;
+  border-radius: 17px; /* 알약 형태의 둥근 모서리 */
+  background: #2A2A2A;
+  font: normal normal 500 14px/34px SUIT;
+  letter-spacing: -0.5px;
+  color: #bbb;
   cursor: pointer;
-  background: #757575;
-  color: #ffffff;
-}
-.dropdown-content {
-  position: absolute;
-  top: 35px;
-  left: 0;
-  background: #222222;
-  padding: 10px;
-  border: 1px solid #444;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-  z-index: 2001; /* 💡 1000에서 2001로 수정 */
+  transition: all 0.2s ease;
   white-space: nowrap;
 }
 
-/* 내부 버튼 및 라벨 스타일 */
-.section-list, .filter-list {
-  gap: 10px;
-}
-.section-list > button, label,
-.districtmap-config > button {
-  height: 25px;
-  width: 80px;
-  border: 1px solid #656565;
-  border-radius: 13px;
-  background: #222222;
-  font: normal normal 600 14px/20px SUIT;
-  letter-spacing: -0.75px;
-  color: #828282;
-  transition: all .2s;
-}
-.districtmap-config > button {
-  width: 100px;
-}
-label {
-  background: #ffffff0d;
-  width: 100px;
-}
-.section-list > button:hover,
-label:hover,
-.districtmap-config > button:hover,
-.req-activate {
-  cursor: pointer;
-  background: #757575;
+/* 호버 및 활성화 상태일 때 브랜드 컬러(#646BA1) 적용 */
+.toggle-btn:hover, .toggle-btn.active,
+.section-list > button:hover, .districtmap-config > button:hover, .req-activate {
+  background: #646BA1;
+  border-color: #646BA1;
   color: #ffffff;
 }
+
 .trenchmap:disabled {
-  background-color: #757575 !important;
-  color: #ffffff;
+  background-color: #646BA1 !important;
+  border-color: #646BA1 !important;
+  color: #ffffff !important;
   cursor: auto !important;
 }
 
-label::before {
+/* 💡 3. 드롭다운 팝업 위치 및 내부 간격 조정 */
+.dropdown-content {
+  position: absolute;
+  top: 46px; /* 버튼이 커졌으므로 위치 하향 조정 */
+  left: 0;
+  background: #2A2A2A;
+  padding: 12px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.5);
+  z-index: 2001;
+  white-space: nowrap;
+  gap: 8px;
+}
+
+/* 💡 4. 체크박스 라벨도 버튼과 완벽하게 동일한 모양으로 통일 */
+.check-label {
+  height: 34px;
+  min-width: 90px;
+  padding: 0 16px;
+  border: 1px solid #555;
+  border-radius: 17px;
+  background: #2A2A2A;
+  font: normal normal 500 14px/34px SUIT;
+  color: #bbb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.check-label:hover { background: #444; color: #fff; }
+
+.check-label::before {
   display: inline-block;
   content: "";
   background-image: url('../../assets/check-icon.png');
@@ -234,52 +251,49 @@ label::before {
   width: 13px;
   height: 9px;
   transition: transform .3s ease-in-out;
-  margin-right: 2px;
+  margin-right: 6px; /* 텍스트와의 간격 조정 */
 }
 
-input[type="checkbox"]:checked+label::before {
+/* 체크되었을 때 브랜드 컬러 적용 */
+input[type="checkbox"]:checked+.check-label::before {
   transform: rotate(-360deg);
-  transition: transform .3s ease-in-out;
 }
 
-input[type="checkbox"]:checked+label {
-  background-color: #757575;
+input[type="checkbox"]:checked+.check-label {
+  background-color: #646BA1;
+  border-color: #646BA1;
   color: #fff;
-  transition: all .2s;
 }
 
-input[type="checkbox"] {
-  position: absolute;
-  opacity: 0;
-}
+input[type="checkbox"] { position: absolute; opacity: 0; }
 
+/* 💡 5. 우측 끝 빠른 서비스 창 버튼도 동일 규격으로 맞춤 */
 .direct-service {
   position: relative;
   display: flex;
   align-items: center;
-  width: 150px;
-  height: 25px;
-  border: 1px solid #FFFFFF;
-  border-radius: 13px;
-  background-color: rgba(255, 255, 255, 0.1);
-  padding: 0 10px;
-  color: #ffffff;
-  font: normal normal 500 14px/20px SUIT;
-  letter-spacing: -0.9px;
-  transition: all .2s;
+  justify-content: center;
+  min-width: 140px;
+  height: 34px;
+  border: 1px solid #555;
+  border-radius: 17px;
+  background-color: #2A2A2A;
+  padding: 0 30px 0 16px;
+  color: #bbb;
+  font: normal normal 500 14px/34px SUIT;
+  transition: all .2s ease;
+  cursor: pointer;
 }
 .direct-service::after {
   position: absolute;
-  right: 10px;
+  right: 14px;
   content: "";
   background-image: url('../../assets/arrow-down-icon.png');
   background-size: cover;
   object-fit: contain;
   width: 10px;
   height: 6px;
+  opacity: 0.7;
 }
-.direct-service:hover {
-  cursor: pointer;
-  background-color: #757575;
-}
+.direct-service:hover { background-color: #444; color: #fff; }
 </style>

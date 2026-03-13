@@ -14,7 +14,7 @@
         @section:change="onChangeSection"
         @trenchmap:change="onChangeTrenchmap"
         @filter:change="onChangeFilter"
-        @districtmapconfig:toggle="onToggleDistrictmap"
+        @country:change="onChangeCountry"  @districtmapconfig:toggle="onToggleDistrictmap"
         @imglist:toggle="onToggleImgList"
         @close:popups="onToolbarPopupsOpened"
         @toolbar:draw="handleStartDraw" :selectedCoords="selectedCoords"
@@ -163,6 +163,10 @@ function onToggleImgList () {
     showDistrictmapConfig.value = false
     map.value?.closePopups() // 지도 사이드 팝업 닫기
   }
+}
+
+function onChangeCountry (c) {
+  map.value.changeCountry(c)
 }
 
 function onToolbarPopupsOpened () {

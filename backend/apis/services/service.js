@@ -11,19 +11,45 @@ const client = new Client({ host: DB_HOST, user: DB_USER, password: DB_PASSWD, d
 client.connect()
 
 // 💡 [신규] 프론트엔드 테스트를 위한 가상의 카테고리별 선박 데이터
+// 💡 개발 및 테스트를 위한 고도화된 Mockup 데이터
 const mockDatabase = {
   loitering: [
-    // 💡 flagcountry: 'Korea' 추가!
-    { mmsi: '412000111', shipname: 'UNKNOWN_A', flagcountry: 'Korea', type: 'Fishing', latitude: 36.50, longitude: 125.80, sog: 0.5, posutcmin: 20240310001000, category: 'loitering' }
+    // --- 한국 (Korea) 선박 ---
+    { mmsi: '440000001', shipname: 'K_FISHING_1', flagcountry: 'Korea', type: 'Fishing', latitude: 36.5123, longitude: 125.8012, sog: 1.2, cog: 145.0, heading: 150.0, posutcmin: 20240310001005, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.88, pred_loitering_type: 0, pred_divergence: 52.14 }, // 0: Oscillatory
+    { mmsi: '440000002', shipname: 'K_TUG_ALPHA', flagcountry: 'Korea', type: 'Tug', latitude: 35.1055, longitude: 129.0433, sog: 0.3, cog: 12.0, heading: 10.0, posutcmin: 20240310001012, category: 'loitering', reconstructed: true, pred_loitering: true, pred_loitering_prob: 0.95, pred_loitering_type: 1, pred_divergence: 45.88 }, // 1: Steady
+    { mmsi: '440000003', shipname: 'K_CARGO_S', flagcountry: 'Korea', type: 'Cargo', latitude: 34.2011, longitude: 127.5022, sog: 0.8, cog: 270.5, heading: 275.0, posutcmin: 20240310001025, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.76, pred_loitering_type: 5, pred_divergence: 60.12 }, // 5: Hesitant
+    { mmsi: '440000004', shipname: 'K_FISHING_2', flagcountry: 'Korea', type: 'Fishing', latitude: 37.4522, longitude: 130.8033, sog: 2.1, cog: 90.0, heading: 88.0, posutcmin: 20240310001030, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.91, pred_loitering_type: 2, pred_divergence: 55.40 }, // 2: Circular
+    { mmsi: '440000005', shipname: 'K_PASSENGER_1', flagcountry: 'Korea', type: 'Passenger', latitude: 33.5122, longitude: 126.5233, sog: 0.1, cog: 350.0, heading: 355.0, posutcmin: 20240310001045, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.65, pred_loitering_type: 3, pred_divergence: 48.90 }, // 3: Transition
+
+    // --- 중국 (China) 선박 ---
+    { mmsi: '412000001', shipname: 'LU_YU_YU', flagcountry: 'China', type: 'Fishing', latitude: 36.8055, longitude: 124.5022, sog: 1.5, cog: 180.0, heading: 180.0, posutcmin: 20240310001000, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.99, pred_loitering_type: 0, pred_divergence: 58.21 }, // 0: Oscillatory
+    { mmsi: '412000002', shipname: 'ZHE_HAI_1', flagcountry: 'China', type: 'Cargo', latitude: 34.0500, longitude: 125.1200, sog: 0.5, cog: 45.0, heading: 50.0, posutcmin: 20240310001015, category: 'loitering', reconstructed: true, pred_loitering: true, pred_loitering_prob: 0.82, pred_loitering_type: 4, pred_divergence: 49.33 }, // 4: Gradual Drift
+    { mmsi: '412000003', shipname: 'LIAO_YU_3', flagcountry: 'China', type: 'Fishing', latitude: 37.1022, longitude: 124.8055, sog: 2.8, cog: 310.0, heading: 315.0, posutcmin: 20240310001020, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.87, pred_loitering_type: 2, pred_divergence: 53.64 }, // 2: Circular
+    { mmsi: '412000004', shipname: 'MIN_YU_9', flagcountry: 'China', type: 'Fishing', latitude: 33.8055, longitude: 125.5022, sog: 0.4, cog: 200.0, heading: 205.0, posutcmin: 20240310001035, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.74, pred_loitering_type: 5, pred_divergence: 51.05 }, // 5: Hesitant
+    { mmsi: '412000005', shipname: 'CN_TANKER_X', flagcountry: 'China', type: 'Tanker', latitude: 34.5022, longitude: 126.1055, sog: 0.2, cog: 110.0, heading: 110.0, posutcmin: 20240310001050, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.68, pred_loitering_type: 1, pred_divergence: 44.12 }, // 1: Steady
+
+    // --- 일본 (Japan) 선박 ---
+    { mmsi: '431000001', shipname: 'MARU_FISHING', flagcountry: 'Japan', type: 'Fishing', latitude: 35.5022, longitude: 130.1055, sog: 1.1, cog: 80.0, heading: 85.0, posutcmin: 20240310001002, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.93, pred_loitering_type: 0, pred_divergence: 54.22 }, // 0: Oscillatory
+    { mmsi: '431000002', shipname: 'TOKYO_CARGO', flagcountry: 'Japan', type: 'Cargo', latitude: 34.1055, longitude: 128.5022, sog: 0.6, cog: 160.0, heading: 160.0, posutcmin: 20240310001018, category: 'loitering', reconstructed: true, pred_loitering: true, pred_loitering_prob: 0.79, pred_loitering_type: 3, pred_divergence: 47.99 }, // 3: Transition
+    { mmsi: '431000003', shipname: 'OSAKA_EXPRESS', flagcountry: 'Japan', type: 'Cargo', latitude: 34.8055, longitude: 129.5022, sog: 0.2, cog: 220.0, heading: 225.0, posutcmin: 20240310001028, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.85, pred_loitering_type: 4, pred_divergence: 50.32 }, // 4: Gradual Drift
+    { mmsi: '431000004', shipname: 'J_TUG_BETA', flagcountry: 'Japan', type: 'Tug', latitude: 35.2055, longitude: 129.8022, sog: 0.0, cog: 0.0, heading: 10.0, posutcmin: 20240310001040, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.98, pred_loitering_type: 1, pred_divergence: 42.15 }, // 1: Steady
+    { mmsi: '431000005', shipname: 'NIHON_TANKER', flagcountry: 'Japan', type: 'Tanker', latitude: 33.9022, longitude: 127.8055, sog: 1.8, cog: 300.0, heading: 305.0, posutcmin: 20240310001055, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.81, pred_loitering_type: 2, pred_divergence: 56.77 }, // 2: Circular
+
+    // --- 이외 (Others) 국가 선박 ---
+    { mmsi: '351000001', shipname: 'PANAMA_STAR', flagcountry: 'Panama', type: 'Cargo', latitude: 34.0055, longitude: 126.5022, sog: 0.3, cog: 10.0, heading: 15.0, posutcmin: 20240310001008, category: 'loitering', reconstructed: true, pred_loitering: true, pred_loitering_prob: 0.72, pred_loitering_type: 4, pred_divergence: 49.88 }, // 4: Gradual Drift
+    { mmsi: '636000002', shipname: 'LIBERIA_EAGLE', flagcountry: 'Liberia', type: 'Tanker', latitude: 33.5022, longitude: 125.8055, sog: 0.1, cog: 55.0, heading: 55.0, posutcmin: 20240310001022, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.89, pred_loitering_type: 1, pred_divergence: 43.50 }, // 1: Steady
+    { mmsi: '538000003', shipname: 'MARSHALL_VOYAGER', flagcountry: 'Marshall Islands', type: 'Cargo', latitude: 35.8055, longitude: 129.9022, sog: 1.4, cog: 190.0, heading: 195.0, posutcmin: 20240310001032, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.94, pred_loitering_type: 0, pred_divergence: 55.20 }, // 0: Oscillatory
+    { mmsi: '563000004', shipname: 'SINGAPORE_WIND', flagcountry: 'Singapore', type: 'Tanker', latitude: 34.3022, longitude: 128.2055, sog: 0.8, cog: 260.0, heading: 265.0, posutcmin: 20240310001042, category: 'loitering', reconstructed: true, pred_loitering: true, pred_loitering_prob: 0.62, pred_loitering_type: 5, pred_divergence: 59.10 }, // 5: Hesitant
+    { mmsi: '371000005', shipname: 'HK_EXPRESS', flagcountry: 'Hong Kong', type: 'Cargo', latitude: 34.6055, longitude: 125.2022, sog: 2.2, cog: 135.0, heading: 140.0, posutcmin: 20240310001058, category: 'loitering', reconstructed: false, pred_loitering: true, pred_loitering_prob: 0.86, pred_loitering_type: 2, pred_divergence: 52.90 } // 2: Circular
   ],
   transshipment: [
-    { mmsi: '412000222', shipname: 'SUSPECT_B', flagcountry: 'Korea', type: 'Cargo', latitude: 34.20, longitude: 127.50, sog: 0.1, posutcmin: 20240310001000, category: 'transshipment' }
+    { mmsi: '412000222', shipname: 'SUSPECT_B', flagcountry: 'China', type: 'Cargo', latitude: 34.20, longitude: 127.50, sog: 0.1, cog: 45.0, posutcmin: 20240310001000, category: 'transshipment' }
   ],
   illegal: [
-    { mmsi: '412000333', shipname: 'SUSPECT_C', flagcountry: 'Korea', type: 'Fishing', latitude: 37.80, longitude: 124.90, sog: 4.5, posutcmin: 20240310001000, category: 'illegal' }
+    { mmsi: '412000333', shipname: 'SUSPECT_C', flagcountry: 'China', type: 'Fishing', latitude: 37.80, longitude: 124.90, sog: 4.5, cog: 180.0, posutcmin: 20240310001000, category: 'illegal' }
   ],
   delayed: [
-    { mmsi: '440555666', shipname: 'SLOW_D', flagcountry: 'Korea', type: 'Tanker', latitude: 34.00, longitude: 128.00, sog: 2.0, posutcmin: 20240310001000, category: 'delayed' }
+    { mmsi: '440555666', shipname: 'SLOW_D', flagcountry: 'Korea', type: 'Tanker', latitude: 34.00, longitude: 128.00, sog: 2.0, cog: 90.0, posutcmin: 20240310001000, category: 'delayed' }
   ]
 }
 

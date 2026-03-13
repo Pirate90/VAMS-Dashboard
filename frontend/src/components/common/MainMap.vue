@@ -43,7 +43,7 @@ import MapContextMenu from '@/components/common/MapContextMenu'
 import * as maptalks from 'maptalks'
 import { vesselApi, servicesApi } from '@/apis'
 
-const emit = defineEmits(['info:show', 'data:load', 'draw:completed', 'popup:open'])
+const emit = defineEmits(['info:show', 'data:load', 'draw:completed', 'popup:open', 'stats:open'])
 
 let map = null
 let img = null
@@ -62,8 +62,9 @@ let currentStart = null
 let currentEnd = null
 let allVesselData = []
 
-// 💡 [핵심 1] 현재 툴바에서 선택된 필터 상태를 기억하는 변수 추가
+// 💡 필터 상태를 저장하는 변수
 let activeFilters = ['normal', 'loitering', 'transshipment', 'illegal', 'delayed']
+let activeCountries = ['Korea']
 
 const vesselList = ref([])
 const showVesselList = ref(false)
@@ -126,10 +127,8 @@ const onClickContextMenuItem = (item) => {
 }
 
 const onStatsClick = (data) => {
-  const { period, item } = data
-  console.log(`[통계 팝업 요청] 기간: ${period}, 구역:`, item)
-
-  // 부모 컴포넌트로 데이터 그대로 전달
+  console.log(`[통계 팝업 요청] 기간: ${data.period}, 구역:`, data.item)
+  closeContextMenu()
   emit('stats:open', data)
 }
 
@@ -137,7 +136,7 @@ const onStatsClick = (data) => {
 const updateVisibleVessels = () => {
   if (!map || !vessel) return
 
-  // 💡 [핵심 2] 데이터가 아예 없을 때(모든 필터 해제 시) 지도를 깨끗하게 비우도록 처리
+  // 데이터가 아예 없을 때(모든 필터 해제 시) 지도를 깨끗하게 비우도록 처리
   if (allVesselData.length === 0) {
     vessel.changeDateTime([])
     return
@@ -186,63 +185,68 @@ const fetchVesselsByCategory = async (category, start, end) => {
   }
 }
 
-const loadFilteredData = async (filters) => {
+// 💡 핵심: 필터링 로직을 깔끔하게 분리하고 강화했습니다.
+const filterByCountry = (targetData) => {
+  return targetData.filter(item => {
+    const name = String(item.shipname || item.ship_name || item.name || '')
+    const flag = String(item.flagcountry || item.flag_country || '')
+
+    // 이름이나 국적이 없으면 버림
+    if (name.trim() === '' || flag.trim() === '') return false
+
+    // 국가 배열이 비어있으면(모두 체크 해제) 전부 숨김
+    if (!activeCountries || activeCountries.length === 0) return false
+
+    // 국가 매칭 로직
+    if (activeCountries.includes('Korea') && flag.includes('Korea')) return true
+    if (activeCountries.includes('China') && flag.includes('China')) return true
+    if (activeCountries.includes('Japan') && flag.includes('Japan')) return true
+
+    // '이외(Others)'가 체크되어 있고, 한/중/일이 아니면 통과
+    if (activeCountries.includes('Others') && !flag.includes('Korea') && !flag.includes('China') && !flag.includes('Japan')) {
+      return true
+    }
+
+    return false
+  })
+}
+
+const loadFilteredData = async () => {
   if (!currentStart || !currentEnd) return
 
   let combinedData = []
 
-  for (const filter of filters) {
-    if (!cachedVessels[filter]) {
-      const res = await fetchVesselsByCategory(filter, currentStart, currentEnd)
+  try {
+    for (const filter of activeFilters) {
+      if (!cachedVessels[filter]) {
+        const res = await fetchVesselsByCategory(filter, currentStart, currentEnd)
+        const targetData = Array.isArray(res) ? res : (res?.data || res?.result || [])
 
-      // 💡 디버깅 1: 백엔드에서 데이터가 제대로 도착했는지 원본 확인!
-      console.log(`👀 [${filter}] API 원본 응답:`, res)
+        const uniqueData = Array.from(new Map(targetData.map(item => [item.mmsi, item])).values())
+        uniqueData.forEach(v => { v.vesselCategory = filter })
 
-      const targetData = Array.isArray(res) ? res : (res?.data || res?.result || [])
+        cachedVessels[filter] = uniqueData
+      }
 
-      // 💡 디버깅 2: 프론트에서 배열 형태로 잘 추출했는지 확인!
-      console.log(`📦 [${filter}] 배열 추출 후 (targetData):`, targetData)
-
-      const validData = targetData.filter(item => {
-        // 💡 안전장치: 혹시라도 shipname이 숫자이거나 undefined일 때 trim() 에러 방지
-        const name = String(item.shipname || item.ship_name || item.name || '')
-        const flag = String(item.flagcountry || item.flag_country || '')
-
-        const isValid = name.trim() !== '' && flag.trim() !== ''
-
-        // 데이터가 누락되어 버려지는 경우 원인 파악용 로그
-        if (!isValid && targetData.length > 0) {
-          console.warn(`🗑️ [${filter}] 필터링 탈락 데이터: name=${name}, flag=${flag}`)
-        }
-
-        return isValid
-      })
-
-      // 💡 디버깅 3: 국적/이름 필터링을 무사히 통과했는지 확인!
-      console.log(`🎯 [${filter}] 노이즈 필터 통과 후 (validData):`, validData)
-
-      const uniqueData = Array.from(new Map(validData.map(item => [item.mmsi, item])).values())
-
-      uniqueData.forEach(v => { v.vesselCategory = filter })
-      cachedVessels[filter] = uniqueData
+      combinedData = [...combinedData, ...cachedVessels[filter]]
     }
 
-    combinedData = [...combinedData, ...cachedVessels[filter]]
+    const finalFilteredData = filterByCountry(combinedData)
+
+    vesselList.value = [...finalFilteredData]
+    vesselList.value.sort((a, b) => {
+      const aIncludes = a.flagcountry?.includes('Korea')
+      const bIncludes = b.flagcountry?.includes('Korea')
+      if (aIncludes && !bIncludes) return -1
+      else if (!aIncludes && bIncludes) return 1
+      else return 0
+    })
+
+    allVesselData = finalFilteredData
+    updateVisibleVessels()
+  } catch (err) {
+    console.error('데이터 필터링 중 오류 발생:', err)
   }
-
-  vesselList.value = [...combinedData]
-  vesselList.value.sort((a, b) => {
-    const aIncludes = a.flagcountry?.includes('Korea')
-    const bIncludes = b.flagcountry?.includes('Korea')
-    if (aIncludes && !bIncludes) return -1
-    else if (!aIncludes && bIncludes) return 1
-    else return 0
-  })
-
-  allVesselData = combinedData
-  console.log('✅ 최종 화면 표출용 합산 데이터 (allVesselData):', allVesselData)
-
-  updateVisibleVessels()
 }
 
 onMounted(async () => {
@@ -427,9 +431,7 @@ defineExpose({
       delayed: null
     }
 
-    // 💡 [핵심 3] 타임슬라이더가 돌아갈 때 무조건 5개를 부르는 게 아니라, 현재 툴바의 상태(activeFilters)만 호출합니다!
-    await loadFilteredData(activeFilters)
-
+    await loadFilteredData()
     emit('data:load')
   },
 
@@ -453,9 +455,14 @@ defineExpose({
   },
 
   changeFilter: async (filters) => {
-    // 💡 [핵심 4] 툴바에서 체크박스를 변경하면 그 상태를 저장합니다!
     activeFilters = filters
-    await loadFilteredData(activeFilters)
+    await loadFilteredData()
+  },
+
+  // 💡 국가 필터 변경 이벤트 수신
+  changeCountry: async (countries) => {
+    activeCountries = countries
+    await loadFilteredData()
   },
 
   highlight: (id) => {
